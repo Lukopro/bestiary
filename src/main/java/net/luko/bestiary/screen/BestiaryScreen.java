@@ -39,11 +39,13 @@ public class BestiaryScreen extends Screen {
     }
 
     private String getMobInfo(ResourceLocation mobId, BestiaryData data){
-        return String.format("%s: Level %d, %d kills. %d left...",
+        return String.format("%s: Level %d, %d kills, %d left until next level. x%.2f damage dealt, x%.3f damage taken.",
                 getMobDisplayName(mobId),
                 data.level(),
                 data.kills(),
-                data.nextLevelKills());
+                data.nextLevelKills(),
+                data.mobBuff().damageFactor(),
+                data.mobBuff().resistanceFactor());
     }
 
     private String getMobDisplayName(ResourceLocation mobId){
