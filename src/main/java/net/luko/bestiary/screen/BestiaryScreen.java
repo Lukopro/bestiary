@@ -3,57 +3,59 @@ package net.luko.bestiary.screen;
 import net.luko.bestiary.data.BestiaryData;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.util.Mth;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import static net.luko.bestiary.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
+
 public class BestiaryScreen extends Screen {
-    private Map<ResourceLocation, BestiaryData> entries;
+    private static final int PADDING = 8;
+    private static final int LEFT_MARGIN = 20;
+
+    private List<BestiaryEntryScreenComponent> bestiaryEntryScreenComponents = new ArrayList<>();
+    private float scrollAmount = 0F;
+    private int totalContentHeight = 0;
 
     public BestiaryScreen(Map<ResourceLocation, BestiaryData> entries) {
         super(Component.literal("Bestiary"));
-        this.entries = entries;
+        for(var entry : entries.entrySet()){
+            this.bestiaryEntryScreenComponents.add(
+                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue()));
+        }
     }
 
     @Override
     protected void init(){
         super.init();
+        totalContentHeight = bestiaryEntryScreenComponents.size() * (ENTRY_HEIGHT + PADDING);
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
         renderBackground(guiGraphics);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 10, 0xFFFFFF);
 
-        int y = 30;
-        for(var entry : this.entries.entrySet()){
-            String mobInfo = getMobInfo(entry.getKey(), entry.getValue());
-            guiGraphics.drawString(this.font, mobInfo, 20, y, 0xAAAAAA);
-            y += 12;
+        guiGraphics.fill(0, 0, this.width, this.height, 0xFF202020);
+
+        int yOffset = 20 - (int)scrollAmount;
+        for(var entry : bestiaryEntryScreenComponents){
+            if(yOffset > -ENTRY_HEIGHT && yOffset < this.height){
+                entry.render(guiGraphics, LEFT_MARGIN, yOffset, this.width - LEFT_MARGIN * 2);
+            }
+            yOffset += ENTRY_HEIGHT + PADDING;
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private String getMobInfo(ResourceLocation mobId, BestiaryData data){
-        return String.format("%s: Level %d, %d kills, %d left until next level. x%.2f damage dealt, x%.3f damage taken.",
-                getMobDisplayName(mobId),
-                data.level(),
-                data.kills(),
-                data.nextLevelKills(),
-                data.mobBuff().damageFactor(),
-                data.mobBuff().resistanceFactor());
-    }
-
-    private String getMobDisplayName(ResourceLocation mobId){
-        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(mobId);
-        if(type != null){
-            return type.getDescription().getString();
-        } else {
-            return mobId.toString();
-        }
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta){
+        this.scrollAmount -= (float)delta * (ENTRY_HEIGHT / 2f);
+        this.scrollAmount = Mth.clamp(this.scrollAmount, 0, Math.max(0, totalContentHeight - this.height + 40));
+        return true;
     }
 }
