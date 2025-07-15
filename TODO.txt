@@ -1,0 +1,3 @@
+- Bestiary GUI
+- Player gets points for levels, and apply's points for buffs
+- BUFFS: damage (specialized? flame, ice), resistance, fire immunity, loot boost, movement slower, boost player movement, thorns,
