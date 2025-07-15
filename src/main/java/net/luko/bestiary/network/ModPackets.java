@@ -13,9 +13,14 @@ public class ModPackets {
     );
 
     public static void register(){
-        CHANNEL.registerMessage(packetId++, SyncBestiaryPacket.class,
-                SyncBestiaryPacket::encode,
-                SyncBestiaryPacket::decode,
-                SyncBestiaryPacket::handle);
+        CHANNEL.registerMessage(packetId++, BestiarySyncPacket.class,
+                BestiarySyncPacket::encode,
+                BestiarySyncPacket::decode,
+                BestiarySyncPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, RequestBestiarySyncPacket.class,
+                RequestBestiarySyncPacket::encode,
+                RequestBestiarySyncPacket::decode,
+                RequestBestiarySyncPacket::handle);
     }
 }

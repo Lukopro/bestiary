@@ -1,8 +1,12 @@
 package net.luko.bestiary.data;
 
+import net.luko.bestiary.network.ModPackets;
+import net.luko.bestiary.network.BestiarySyncPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraftforge.network.PacketDistributor;
 import oshi.util.tuples.Pair;
 
 import java.util.Collections;
@@ -22,10 +26,17 @@ public class BestiaryManager {
         }
     }
 
-    public void onKill(ResourceLocation mobId){
+    public void onKillNoSync(ResourceLocation mobId){
         int newKills = killCounts.getOrDefault(mobId, 0) + 1;
         killCounts.put(mobId, newKills);
         cachedData.put(mobId, computeBestiaryData(newKills));
+    }
+
+    public void onKillWithSync(ServerPlayer player, ResourceLocation mobId){
+        int newKills = killCounts.getOrDefault(mobId, 0) + 1;
+        killCounts.put(mobId, newKills);
+        cachedData.put(mobId, computeBestiaryData(newKills));
+        syncToPlayer(player);
     }
 
     public int getKillCount(ResourceLocation mobId){
@@ -67,5 +78,12 @@ public class BestiaryManager {
         float damageFactor = 1.0F + 0.05F * (float)level;
         float resistanceFactor = (float)Math.pow(0.95F, level);
         return new MobBuff(damageFactor, resistanceFactor);
+    }
+
+    public void syncToPlayer(ServerPlayer player){
+        ModPackets.CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new BestiarySyncPacket(this.getAllData())
+        );
     }
 }

@@ -7,7 +7,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Map;
 
@@ -50,7 +49,7 @@ public class BestiaryScreen extends Screen {
     private String getMobDisplayName(ResourceLocation mobId){
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(mobId);
         if(type != null){
-            return type.getDescriptionId();
+            return type.getDescription().getString();
         } else {
             return mobId.toString();
         }

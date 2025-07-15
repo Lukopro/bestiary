@@ -4,8 +4,6 @@ import net.luko.bestiary.Bestiary;
 import net.luko.bestiary.data.BestiaryManager;
 import net.luko.bestiary.data.MobBuff;
 import net.luko.bestiary.data.PlayerBestiaryStore;
-import net.luko.bestiary.network.ModPackets;
-import net.luko.bestiary.network.SyncBestiaryPacket;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +16,6 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
 
 @Mod.EventBusSubscriber(modid = Bestiary.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerModEvents {
@@ -30,10 +27,7 @@ public class ServerModEvents {
         BestiaryManager manager = new BestiaryManager();
         manager.loadFromNBT(tag);
 
-        ModPackets.CHANNEL.send(
-                PacketDistributor.PLAYER.with(() -> player),
-                new SyncBestiaryPacket(manager.getAllData())
-        );
+        manager.syncToPlayer(player);
 
         PlayerBestiaryStore.set(player, manager);
     }
@@ -57,7 +51,7 @@ public class ServerModEvents {
                 event.getEntity().getType());
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
-        manager.onKill(mobId);
+        manager.onKillWithSync(player, mobId);
 
         // Later on, do this less often
         player.getPersistentData().put("Bestiary", manager.serializeNBT());
