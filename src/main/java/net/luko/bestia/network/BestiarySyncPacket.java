@@ -1,8 +1,8 @@
-package net.luko.bestiary.network;
+package net.luko.bestia.network;
 
-import net.luko.bestiary.client.ClientBestiaryData;
-import net.luko.bestiary.data.BestiaryData;
-import net.luko.bestiary.data.BestiaryDataSerializer;
+import net.luko.bestia.client.ClientBestiaryData;
+import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.data.BestiaryDataSerializer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkEvent;

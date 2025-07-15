@@ -1,6 +1,6 @@
-package net.luko.bestiary.screen;
+package net.luko.bestia.screen;
 
-import net.luko.bestiary.data.BestiaryData;
+import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static net.luko.bestiary.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
+import static net.luko.bestia.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
 
 public class BestiaryScreen extends Screen {
     private static final int PADDING = 8;

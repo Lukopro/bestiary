@@ -1,6 +1,6 @@
-package net.luko.bestiary.client;
+package net.luko.bestia.client;
 
-import net.luko.bestiary.data.BestiaryData;
+import net.luko.bestia.data.BestiaryData;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;

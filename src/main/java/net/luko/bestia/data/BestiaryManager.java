@@ -1,7 +1,7 @@
-package net.luko.bestiary.data;
+package net.luko.bestia.data;
 
-import net.luko.bestiary.network.ModPackets;
-import net.luko.bestiary.network.BestiarySyncPacket;
+import net.luko.bestia.network.ModPackets;
+import net.luko.bestia.network.BestiarySyncPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

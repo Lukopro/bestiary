@@ -1,9 +1,9 @@
-package net.luko.bestiary.server;
+package net.luko.bestia.server;
 
-import net.luko.bestiary.Bestiary;
-import net.luko.bestiary.data.BestiaryManager;
-import net.luko.bestiary.data.MobBuff;
-import net.luko.bestiary.data.PlayerBestiaryStore;
+import net.luko.bestia.Bestia;
+import net.luko.bestia.data.BestiaryManager;
+import net.luko.bestia.data.MobBuff;
+import net.luko.bestia.data.PlayerBestiaryStore;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -17,7 +17,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Bestiary.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = Bestia.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerModEvents {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){

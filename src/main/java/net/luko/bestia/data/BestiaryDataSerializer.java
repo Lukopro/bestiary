@@ -1,4 +1,4 @@
-package net.luko.bestiary.data;
+package net.luko.bestia.data;
 
 import net.minecraft.network.FriendlyByteBuf;
 

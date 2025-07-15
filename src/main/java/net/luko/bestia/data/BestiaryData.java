@@ -1,4 +1,4 @@
-package net.luko.bestiary.data;
+package net.luko.bestia.data;
 
 public record BestiaryData(
         int kills,

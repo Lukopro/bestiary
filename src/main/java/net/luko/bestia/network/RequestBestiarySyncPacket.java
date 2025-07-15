@@ -1,7 +1,7 @@
-package net.luko.bestiary.network;
+package net.luko.bestia.network;
 
-import net.luko.bestiary.data.BestiaryManager;
-import net.luko.bestiary.data.PlayerBestiaryStore;
+import net.luko.bestia.data.BestiaryManager;
+import net.luko.bestia.data.PlayerBestiaryStore;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;

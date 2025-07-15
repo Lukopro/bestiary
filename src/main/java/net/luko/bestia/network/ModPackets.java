@@ -1,6 +1,6 @@
-package net.luko.bestiary.network;
+package net.luko.bestia.network;
 
-import net.luko.bestiary.Bestiary;
+import net.luko.bestia.Bestia;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -8,7 +8,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public class ModPackets {
     private static int packetId = 0;
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(Bestiary.MODID, "main"),
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "main"),
             () -> "1.0", s -> true, s -> true
     );
 
