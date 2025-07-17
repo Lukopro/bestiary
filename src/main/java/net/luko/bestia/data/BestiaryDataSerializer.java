@@ -6,7 +6,7 @@ public class BestiaryDataSerializer {
     public static void write(FriendlyByteBuf buf, BestiaryData data){
         buf.writeVarInt(data.kills());
         buf.writeVarInt(data.level());
-        buf.writeVarInt(data.nextLevelKills());
+        buf.writeVarInt(data.remaining());
 
         MobBuff mobBuff = data.mobBuff();
         buf.writeFloat(mobBuff.damageFactor());
