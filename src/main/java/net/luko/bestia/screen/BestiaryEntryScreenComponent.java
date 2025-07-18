@@ -76,7 +76,7 @@ public class BestiaryEntryScreenComponent {
         String levelText = String.format("%d", data.level());
         int levelWidth = FONT.width(levelText);
         float levelTextX = ((float)x + (float)ENTRY_WIDTH - 23F) / 2.5F - (float)levelWidth / 2F;
-        float levelTextY = (float)(y + 27F) / 2.5F;
+        float levelTextY = ((float)y + 27F) / 2.5F;
 
 
         guiGraphics.drawString(FONT, levelText,
