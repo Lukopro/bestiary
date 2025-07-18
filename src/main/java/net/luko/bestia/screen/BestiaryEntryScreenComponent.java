@@ -14,6 +14,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class BestiaryEntryScreenComponent {
     private static final int COMPONENT_TEXTURE_HEIGHT = 48;
     private static final int TITLE_TEXTURE_HEIGHT = 12;
@@ -36,6 +40,8 @@ public class BestiaryEntryScreenComponent {
     private final BestiaryData data;
     private final EntityType<?> entityType;
 
+    private Set<BestiaryTooltip> tooltips = new HashSet<>();
+
     private static final Font FONT = Minecraft.getInstance().font;
 
     public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
@@ -45,6 +51,8 @@ public class BestiaryEntryScreenComponent {
     }
 
     public void render(GuiGraphics guiGraphics, int x, int y){
+        this.tooltips.clear();
+
         String name = entityType != null ? entityType.getDescription().getString() : mobId.toString();
 
         drawTitle(guiGraphics, x + 2, y, name);
@@ -52,13 +60,29 @@ public class BestiaryEntryScreenComponent {
         drawComponent(guiGraphics, x , y + TITLE_TEXTURE_HEIGHT);
 
         if(entityType != null){
-            drawMobIcon(guiGraphics, x + 6, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
+            drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
         }
 
-        Component text = Component.literal(String.format("%d", data.level()))
-                .withStyle(style -> style.withFont(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "level")));
-        guiGraphics.drawCenteredString(FONT, text,
-                x + ENTRY_WIDTH - 24, y + 23, -1);
+        this.tooltips.add(new BestiaryTooltip(
+                x + 168, x + ENTRY_WIDTH - 4,
+                y + TITLE_TEXTURE_HEIGHT + 4, y + ENTRY_HEIGHT - 4,
+                List.of(Component.literal(String.format("%d kills", data.kills())),
+                        Component.literal(String.format("%d needed, %d remaining", (data.level() + 1) * 2, data.remaining())))
+        ));
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().scale(2.5F, 2.5F, 1.0F);
+
+        String levelText = String.format("%d", data.level());
+        int levelWidth = FONT.width(levelText);
+        float levelTextX = ((float)x + (float)ENTRY_WIDTH - 23F) / 2.5F - (float)levelWidth / 2F;
+        float levelTextY = (float)(y + 27F) / 2.5F;
+
+
+        guiGraphics.drawString(FONT, levelText,
+                levelTextX, levelTextY, -1, false);
+
+        guiGraphics.pose().popPose();
 
         guiGraphics.drawString(FONT,
                 String.format("x%.2f damage dealt",
@@ -68,6 +92,10 @@ public class BestiaryEntryScreenComponent {
                 String.format("x%.3f damage taken",
                         data.mobBuff().resistanceFactor()),
                         x + 52, y + 40, 0xAAAAAA);
+    }
+
+    public Set<BestiaryTooltip> getTooltips(){
+        return this.tooltips;
     }
 
     private void drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {

@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static net.luko.bestia.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
 
@@ -73,7 +74,7 @@ public class BestiaryScreen extends Screen {
 
         drawPanel(guiGraphics);
 
-        renderEntries(guiGraphics, mouseX, mouseY, partialTick);
+        renderEntries(guiGraphics, mouseX, mouseY);
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
@@ -107,7 +108,7 @@ public class BestiaryScreen extends Screen {
                 PANEL_TEXTURE_WIDTH, PANEL_TEXTURE_HEIGHT);
     }
 
-    private void renderEntries(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    private void renderEntries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int scissorX = this.leftPos;
         int scissorY = this.topPos + PANEL_TOP_BLIT_HEIGHT;
         int scissorWidth = PANEL_BLIT_WIDTH;
@@ -122,7 +123,7 @@ public class BestiaryScreen extends Screen {
                 scissorHeight * scaleFactor
         );
 
-        int yOffset = this.topPos + PANEL_TOP_BLIT_HEIGHT + 4 - (int)scrollAmount;
+        int yOffset = this.topPos + PANEL_TOP_BLIT_HEIGHT + PADDING - (int)scrollAmount;
         for(var entry : bestiaryEntryScreenComponents){
             if(yOffset > -ENTRY_HEIGHT && yOffset < this.height){
                 entry.render(guiGraphics, this.leftPos + LEFT_BLIT_MARGIN, yOffset);
@@ -131,6 +132,23 @@ public class BestiaryScreen extends Screen {
         }
 
         RenderSystem.disableScissor();
+
+        List<Component> tooltipToRender = null;
+        if(mouseX >= leftPos + LEFT_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - LEFT_BLIT_MARGIN
+        && mouseY >= topPos + PANEL_TOP_BLIT_HEIGHT && mouseY <= topPos - PANEL_TOP_BLIT_HEIGHT + getPanelContentHeight()){
+            for(var component : bestiaryEntryScreenComponents){
+                for(var tooltip : component.getTooltips()){
+                    if(tooltip.contains(mouseX, mouseY)){
+                        tooltipToRender = tooltip.tooltip();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(tooltipToRender != null) guiGraphics.renderTooltip(
+                Minecraft.getInstance().font, tooltipToRender, Optional.empty(), mouseX, mouseY
+        );
     }
 
     private int getPanelContentHeight(){
@@ -140,7 +158,11 @@ public class BestiaryScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta){
         this.scrollAmount -= (float)delta * (ENTRY_HEIGHT / 2f);
-        this.scrollAmount = Mth.clamp(this.scrollAmount, 0, Math.max(0, totalContentHeight - this.height + 40));
+
+        int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
+        float maxScroll = Math.max(0, totalContentHeight - visibleHeight);
+
+        this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
         return true;
     }
 }
