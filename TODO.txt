@@ -1,3 +1,6 @@
-- Bestiary GUI
+-~ THIS IS FOR PERSONAL USE, DO NOT EXPECT THESE CHANGES ~-
+
+- Better ordering, search bar, tabs?
+- Bestiary GUI (better scroll, info panel, buff icons)
 - Player gets points for levels, and apply's points for buffs
 - BUFFS: damage (specialized? flame, ice), resistance, fire immunity, loot boost, movement slower, boost player movement, thorns,

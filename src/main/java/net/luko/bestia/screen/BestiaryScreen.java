@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +22,8 @@ public class BestiaryScreen extends Screen {
     private static final ResourceLocation PANEL_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/panel.png");
 
-    private static final int PANEL_TEXTURE_WIDTH = 1742;
-    private static final int PANEL_TEXTURE_HEIGHT = 2048;
+    private static final int PANEL_TEXTURE_WIDTH = 336;
+    private static final int PANEL_TEXTURE_HEIGHT = 384;
 
     private static final int PANEL_BLIT_WIDTH = 336;
     private static final int PANEL_BLIT_HEIGHT = 384;
@@ -33,8 +34,8 @@ public class BestiaryScreen extends Screen {
 
     private static final float SCALE = (float)PANEL_BLIT_HEIGHT / (float)PANEL_TEXTURE_HEIGHT;
 
-    private static final int PANEL_TOP_UV_HEIGHT = 296;
-    private static final int PANEL_BOTTOM_UV_HEIGHT = 295;
+    private static final int PANEL_TOP_UV_HEIGHT = 54;
+    private static final int PANEL_BOTTOM_UV_HEIGHT = 54;
     private static final int PANEL_MIDDLE_UV_HEIGHT =
             PANEL_TEXTURE_HEIGHT - PANEL_TOP_UV_HEIGHT - PANEL_BOTTOM_UV_HEIGHT;
 
@@ -110,9 +111,9 @@ public class BestiaryScreen extends Screen {
 
     private void renderEntries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int scissorX = this.leftPos;
-        int scissorY = this.topPos + PANEL_TOP_BLIT_HEIGHT;
+        int scissorY = this.topPos + PANEL_TOP_BLIT_HEIGHT - 6;
         int scissorWidth = PANEL_BLIT_WIDTH;
-        int scissorHeight = getPanelContentHeight() - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT;
+        int scissorHeight = getPanelContentHeight() - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT + 12;
         int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
         int windowHeight = Minecraft.getInstance().getWindow().getHeight();
 
@@ -133,6 +134,14 @@ public class BestiaryScreen extends Screen {
 
         RenderSystem.disableScissor();
 
+        List<Component> tooltipToRender = getTooltip(mouseX, mouseY);
+
+        if(tooltipToRender != null) guiGraphics.renderTooltip(
+                Minecraft.getInstance().font, tooltipToRender, Optional.empty(), mouseX, mouseY
+        );
+    }
+
+    private @Nullable List<Component> getTooltip(int mouseX, int mouseY) {
         List<Component> tooltipToRender = null;
         if(mouseX >= leftPos + LEFT_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - LEFT_BLIT_MARGIN
         && mouseY >= topPos + PANEL_TOP_BLIT_HEIGHT && mouseY <= topPos - PANEL_TOP_BLIT_HEIGHT + getPanelContentHeight()){
@@ -145,10 +154,7 @@ public class BestiaryScreen extends Screen {
                 }
             }
         }
-
-        if(tooltipToRender != null) guiGraphics.renderTooltip(
-                Minecraft.getInstance().font, tooltipToRender, Optional.empty(), mouseX, mouseY
-        );
+        return tooltipToRender;
     }
 
     private int getPanelContentHeight(){
