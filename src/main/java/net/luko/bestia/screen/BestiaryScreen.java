@@ -5,6 +5,7 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -50,23 +51,68 @@ public class BestiaryScreen extends Screen {
     private int topPos;
 
     private List<BestiaryEntryScreenComponent> bestiaryEntryScreenComponents = new ArrayList<>();
+    private List<BestiaryEntryScreenComponent> filteredEntries = new ArrayList<>();
+
+    private EditBox searchBox;
+
     private float scrollAmount = 0F;
     private int totalContentHeight = 0;
 
     public BestiaryScreen(Map<ResourceLocation, BestiaryData> entries) {
         super(Component.literal("Bestiary"));
+
         for(var entry : entries.entrySet()){
             this.bestiaryEntryScreenComponents.add(
                     new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue()));
         }
+        this.filteredEntries = List.copyOf(this.bestiaryEntryScreenComponents);
     }
 
     @Override
     protected void init(){
         super.init();
+
         totalContentHeight = bestiaryEntryScreenComponents.size() * (ENTRY_HEIGHT + PADDING);
         this.leftPos = (this.width - PANEL_BLIT_WIDTH) / 2;
         this.topPos = 16;
+
+        this.searchBox = new EditBox(
+                this.font,
+                this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90,
+                this.topPos + 13,
+                180, 21,
+                Component.literal("Search")
+        );
+
+        this.searchBox.setMaxLength(50);
+        this.searchBox.setResponder(this::onSearchChanged);
+        this.searchBox.setBordered(true);
+        this.searchBox.setVisible(true);
+        this.addRenderableWidget(this.searchBox);
+    }
+
+    private void onSearchChanged(String newText){
+        String query = newText.trim().toLowerCase();
+
+        this.filteredEntries = this.bestiaryEntryScreenComponents.stream()
+                .filter(entry -> entry.getDisplayName().toLowerCase().contains(query))
+                .toList();
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers){
+        if(this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)){
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers){
+        if(this.searchBox != null && this.searchBox.charTyped(codePoint, modifiers)){
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
@@ -125,7 +171,7 @@ public class BestiaryScreen extends Screen {
         );
 
         int yOffset = this.topPos + PANEL_TOP_BLIT_HEIGHT + PADDING - (int)scrollAmount;
-        for(var entry : bestiaryEntryScreenComponents){
+        for(var entry : filteredEntries){
             if(yOffset > -ENTRY_HEIGHT && yOffset < this.height){
                 entry.render(guiGraphics, this.leftPos + LEFT_BLIT_MARGIN, yOffset);
             }

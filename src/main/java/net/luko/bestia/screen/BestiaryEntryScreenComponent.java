@@ -50,12 +50,14 @@ public class BestiaryEntryScreenComponent {
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
     }
 
+    public String getDisplayName(){
+        return entityType != null ? entityType.getDescription().getString() : mobId.toString();
+    }
+
     public void render(GuiGraphics guiGraphics, int x, int y){
         this.tooltips.clear();
 
-        String name = entityType != null ? entityType.getDescription().getString() : mobId.toString();
-
-        drawTitle(guiGraphics, x + 2, y, name);
+        drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
 
         drawComponent(guiGraphics, x , y + TITLE_TEXTURE_HEIGHT);
 
