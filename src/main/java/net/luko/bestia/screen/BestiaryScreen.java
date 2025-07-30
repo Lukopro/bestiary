@@ -240,7 +240,10 @@ public class BestiaryScreen extends Screen {
         int yOffset = this.topPos + PANEL_TOP_BLIT_HEIGHT + PADDING - (int)scrollAmount;
         for(var entry : filteredEntries){
             if(yOffset > -ENTRY_HEIGHT && yOffset < this.height){
-                entry.render(guiGraphics, this.leftPos + LEFT_BLIT_MARGIN, yOffset);
+                int x = this.leftPos + LEFT_BLIT_MARGIN;
+                int y = yOffset;
+                entry.render(guiGraphics, x, y);
+                if(mouseInScissor(mouseX, mouseY)) entry.checkMouse(x, y, mouseX, mouseY);
             }
             yOffset += ENTRY_HEIGHT + PADDING;
         }
@@ -254,10 +257,14 @@ public class BestiaryScreen extends Screen {
         );
     }
 
+    private boolean mouseInScissor(int mouseX, int mouseY){
+        return mouseX >= leftPos + LEFT_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - LEFT_BLIT_MARGIN
+                && mouseY >= topPos + PANEL_TOP_BLIT_HEIGHT && mouseY <= topPos - PANEL_TOP_BLIT_HEIGHT + getPanelContentHeight();
+    }
+
     private @Nullable List<Component> getTooltip(int mouseX, int mouseY) {
         List<Component> tooltipToRender = null;
-        if(mouseX >= leftPos + LEFT_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - LEFT_BLIT_MARGIN
-        && mouseY >= topPos + PANEL_TOP_BLIT_HEIGHT && mouseY <= topPos - PANEL_TOP_BLIT_HEIGHT + getPanelContentHeight()){
+        if(mouseInScissor(mouseX, mouseY)){
             for(var component : bestiaryEntryScreenComponents){
                 for(var tooltip : component.getTooltips()){
                     if(tooltip.contains(mouseX, mouseY)){

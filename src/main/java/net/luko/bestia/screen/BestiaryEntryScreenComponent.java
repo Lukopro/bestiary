@@ -1,11 +1,14 @@
 package net.luko.bestia.screen;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,16 +28,32 @@ public class BestiaryEntryScreenComponent {
     private static final int TITLE_TEXTURE_LEFT_WIDTH = 1;
     private static final int TITLE_TEXTURE_MIDDLE_WIDTH = 18;
     private static final int TITLE_TEXTURE_RIGHT_WIDTH = 1;
+    private static final int LEVEL_BAR_HEIGHT = 8;
+    private static final int LEVEL_BAR_WIDTH = 212;
+    private static final int LEVEL_BAR_PADDING = 1;
 
-    public static final int ENTRY_HEIGHT = COMPONENT_TEXTURE_HEIGHT + TITLE_TEXTURE_HEIGHT;
+    public static final int ENTRY_HEIGHT = COMPONENT_TEXTURE_HEIGHT + TITLE_TEXTURE_HEIGHT + LEVEL_BAR_HEIGHT + LEVEL_BAR_PADDING;
     public static final int ENTRY_WIDTH = 212;
 
     private static final ResourceLocation COMPONENT_TEXTURE_DARK =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_dark.png");
     private static final ResourceLocation COMPONENT_TEXTURE_LIGHT =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_light.png");
-    private static final ResourceLocation TITLE_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_title.png");
+
+    private static final ResourceLocation TITLE_TEXTURE_DARK =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_dark.png");
+    private static final ResourceLocation TITLE_TEXTURE_LIGHT =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_light.png");
+
+    private static final ResourceLocation LEVEL_COMPLETED_DARK =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_dark.png");
+    private static final ResourceLocation LEVEL_COMPLETED_LIGHT =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
+    private static final ResourceLocation LEVEL_BACKGROUND_DARK =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_dark.png");
+    private static final ResourceLocation LEVEL_BACKGROUND_LIGHT =
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_light.png");
+
 
     private final ResourceLocation mobId;
     private final BestiaryData data;
@@ -43,6 +62,8 @@ public class BestiaryEntryScreenComponent {
     private Set<BestiaryTooltip> tooltips = new HashSet<>();
 
     private static final Font FONT = Minecraft.getInstance().font;
+
+    public boolean mouseIsHovering = false;
 
     public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
         this.mobId = mobId;
@@ -54,16 +75,45 @@ public class BestiaryEntryScreenComponent {
         return entityType != null ? entityType.getDescription().getString() : mobId.toString();
     }
 
+    public void checkMouse(int x, int y, int mouseX, int mouseY){
+        // Check if it's over the title
+        if(mouseX >= x + 2 && mouseX < x + 2 + this.getTitleBlitWidth(this.getDisplayName())
+        && mouseY >= y && mouseY < y + TITLE_TEXTURE_HEIGHT){
+            this.mouseIsHovering = true;
+            return;
+        }
+
+        // Check if it's over the main component or level bar
+        if(mouseX >= x && mouseX < x + ENTRY_WIDTH
+        && mouseY >= y + TITLE_TEXTURE_HEIGHT && mouseY < y + ENTRY_HEIGHT){
+            this.mouseIsHovering = true;
+            return;
+        }
+
+        this.mouseIsHovering = false;
+    }
+
     public void render(GuiGraphics guiGraphics, int x, int y){
         this.tooltips.clear();
 
         drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
 
-        drawComponent(guiGraphics, x , y + TITLE_TEXTURE_HEIGHT);
+        drawComponent(guiGraphics, x, y + TITLE_TEXTURE_HEIGHT);
 
-        if(entityType != null){
-            drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
-        }
+        drawLevelBar(guiGraphics, x + ENTRY_WIDTH / 2, y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT);
+
+        drawLevelText(guiGraphics, x, y);
+
+        if(entityType != null) drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
+
+        guiGraphics.drawString(FONT,
+                String.format("x%.2f damage dealt",
+                        data.mobBuff().damageFactor()),
+                x + 52, y + 24, 0xAAAAAA);
+        guiGraphics.drawString(FONT,
+                String.format("x%.3f damage taken",
+                        data.mobBuff().resistanceFactor()),
+                        x + 52, y + 40, 0xAAAAAA);
 
         this.tooltips.add(new BestiaryTooltip(
                 x + 168, x + ENTRY_WIDTH - 4,
@@ -72,6 +122,73 @@ public class BestiaryEntryScreenComponent {
                         Component.literal(String.format("%d needed, %d remaining", (data.level() + 1) * 2, data.remaining())))
         ));
 
+        this.mouseIsHovering = false;
+    }
+
+    public Set<BestiaryTooltip> getTooltips(){
+        return this.tooltips;
+    }
+
+    private final int xPadding = 3;
+
+    private int getTitleBlitWidth(String name){
+        return TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + FONT.width(name) + TITLE_TEXTURE_RIGHT_WIDTH;
+    }
+
+    private void drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {
+        int titleWidth = FONT.width(name);
+        ResourceLocation titleTexture = mouseIsHovering ? TITLE_TEXTURE_LIGHT : TITLE_TEXTURE_DARK;
+
+        guiGraphics.blit(titleTexture, x, y,
+                0, 0,
+                TITLE_TEXTURE_LEFT_WIDTH, TITLE_TEXTURE_HEIGHT,
+                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+
+        int middleXEnd = x + TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + titleWidth;
+
+        for(int middleXBlit = x + TITLE_TEXTURE_LEFT_WIDTH; middleXBlit < middleXEnd; middleXBlit += TITLE_TEXTURE_MIDDLE_WIDTH){
+            int blitWidth = Math.min(TITLE_TEXTURE_MIDDLE_WIDTH, middleXEnd - middleXBlit);
+            guiGraphics.blit(titleTexture, middleXBlit, y,
+                    TITLE_TEXTURE_LEFT_WIDTH, 0,
+                    blitWidth, TITLE_TEXTURE_HEIGHT,
+                    TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+        }
+
+        guiGraphics.blit(titleTexture, middleXEnd, y,
+                TITLE_TEXTURE_WIDTH - TITLE_TEXTURE_RIGHT_WIDTH, 0,
+                TITLE_TEXTURE_RIGHT_WIDTH, TITLE_TEXTURE_HEIGHT,
+                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+
+        guiGraphics.drawString(FONT, name,
+                x + TITLE_TEXTURE_LEFT_WIDTH + xPadding, y + 3, 0xFFFFFF);
+    }
+
+    private void drawComponent(GuiGraphics guiGraphics, int x, int y) {
+        ResourceLocation texture = this.mouseIsHovering ? COMPONENT_TEXTURE_LIGHT : COMPONENT_TEXTURE_DARK;
+        guiGraphics.blit(texture, x, y,
+                0, 0,
+                ENTRY_WIDTH, COMPONENT_TEXTURE_HEIGHT,
+                ENTRY_WIDTH, COMPONENT_TEXTURE_HEIGHT);
+    }
+
+    private void drawLevelBar(GuiGraphics guiGraphics, int middleX, int y) {
+        ResourceLocation completedTexture = this.mouseIsHovering ? LEVEL_COMPLETED_LIGHT : LEVEL_COMPLETED_DARK;
+        ResourceLocation backgroundTexture = this.mouseIsHovering ? LEVEL_BACKGROUND_LIGHT : LEVEL_BACKGROUND_DARK;
+
+        int x = middleX - LEVEL_BAR_WIDTH / 2;
+        int split = Math.round((float)ENTRY_WIDTH * (float)((data.level() + 1) * 2 - data.remaining()) / (float)((data.level() + 1) * 2));
+
+        guiGraphics.blit(completedTexture, x, y,
+                0, 0,
+                split, LEVEL_BAR_HEIGHT,
+                LEVEL_BAR_WIDTH, LEVEL_BAR_HEIGHT);
+        guiGraphics.blit(backgroundTexture, x + split, y,
+                split, 0,
+                LEVEL_BAR_WIDTH - split, LEVEL_BAR_HEIGHT,
+                LEVEL_BAR_WIDTH, LEVEL_BAR_HEIGHT);
+    }
+
+    private void drawLevelText(GuiGraphics guiGraphics, int x, int y) {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().scale(2.5F, 2.5F, 1.0F);
 
@@ -85,59 +202,6 @@ public class BestiaryEntryScreenComponent {
                 levelTextX, levelTextY, -1, false);
 
         guiGraphics.pose().popPose();
-
-        guiGraphics.drawString(FONT,
-                String.format("x%.2f damage dealt",
-                        data.mobBuff().damageFactor()),
-                x + 52, y + 24, 0xAAAAAA);
-        guiGraphics.drawString(FONT,
-                String.format("x%.3f damage taken",
-                        data.mobBuff().resistanceFactor()),
-                        x + 52, y + 40, 0xAAAAAA);
-    }
-
-    public Set<BestiaryTooltip> getTooltips(){
-        return this.tooltips;
-    }
-
-    private void drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {
-        int titleWidth = FONT.width(name);
-
-        guiGraphics.blit(TITLE_TEXTURE, x, y,
-                0, 0,
-                TITLE_TEXTURE_LEFT_WIDTH, TITLE_TEXTURE_HEIGHT,
-                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
-
-        int xPadding = 3;
-        int middleXEnd = x + TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + titleWidth;
-
-        for(int middleXBlit = x + TITLE_TEXTURE_LEFT_WIDTH; middleXBlit < middleXEnd; middleXBlit += TITLE_TEXTURE_MIDDLE_WIDTH){
-            int blitWidth = Math.min(TITLE_TEXTURE_MIDDLE_WIDTH, middleXEnd - middleXBlit);
-            guiGraphics.blit(TITLE_TEXTURE, middleXBlit, y,
-                    TITLE_TEXTURE_LEFT_WIDTH, 0,
-                    blitWidth, TITLE_TEXTURE_HEIGHT,
-                    TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
-        }
-
-        guiGraphics.blit(TITLE_TEXTURE, middleXEnd, y,
-                TITLE_TEXTURE_WIDTH - TITLE_TEXTURE_RIGHT_WIDTH, 0,
-                TITLE_TEXTURE_RIGHT_WIDTH, TITLE_TEXTURE_HEIGHT,
-                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
-
-        guiGraphics.drawString(FONT, name,
-                x + TITLE_TEXTURE_LEFT_WIDTH + xPadding, y + 3, 0xFFFFFF);
-    }
-
-    private void drawComponent(GuiGraphics guiGraphics, int x, int y) {
-        int split = Math.round((float)ENTRY_WIDTH * (float)((data.level() + 1) * 2 - data.remaining()) / (float)((data.level() + 1) * 2));
-        guiGraphics.blit(COMPONENT_TEXTURE_LIGHT, x, y,
-                0, 0,
-                split, COMPONENT_TEXTURE_HEIGHT,
-                ENTRY_WIDTH, COMPONENT_TEXTURE_HEIGHT);
-        guiGraphics.blit(COMPONENT_TEXTURE_DARK, x + split, y,
-                split, 0,
-                ENTRY_WIDTH - split, COMPONENT_TEXTURE_HEIGHT,
-                ENTRY_WIDTH, COMPONENT_TEXTURE_HEIGHT);
     }
 
     private void drawMobIcon(GuiGraphics guiGraphics, int x, int y, EntityType<?> type){
@@ -161,8 +225,21 @@ public class BestiaryEntryScreenComponent {
             living.yHeadRot = 0;
             living.yHeadRotO = 0;
 
-            InventoryScreen.renderEntityInInventory(guiGraphics,
-                    x + 16, y + 32 + computeEntityYOffset(living, poseXRot), computeEntityScale(living), pose, camera, living);
+            if(this.mouseIsHovering){
+                RenderSystem.enableBlend();
+                RenderSystem.setShaderColor(1.2F, 1.2F, 1.2F, 1.0F);
+            }
+
+            // In some sort of freak case that renderEntityInInventory throws, RenderSystem is reset and disabled.
+            try {
+                InventoryScreen.renderEntityInInventory(guiGraphics,
+                        x + 16, y + 32 + computeEntityYOffset(living, poseXRot), computeEntityScale(living), pose, camera, living);
+            } finally {
+                if(this.mouseIsHovering){
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    RenderSystem.disableBlend();
+                }
+            }
         }
     }
 

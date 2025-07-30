@@ -1,6 +1,7 @@
 -~ THIS IS FOR PERSONAL USE, DO NOT EXPECT THESE CHANGES ~-
 
 - Bestiary GUI (buff icons)
-- Player gets points for levels, and apply's points for buffs
+- Player gets points for levels, and applys points for buffs
 - BUFFS: damage (specialized? flame, ice), resistance, fire immunity, loot boost, movement slower, boost player movement, thorns,
 - Basic buffs for every level, get a point every 10 levels, use for special buffs?
+- Expand button in bestiary (2x2 entries in same space)

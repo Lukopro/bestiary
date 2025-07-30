@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 public class Bestia
 {
     public static final String MODID = "bestia";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public Bestia(FMLJavaModLoadingContext context)
     {
