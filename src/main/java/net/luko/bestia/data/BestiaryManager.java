@@ -1,6 +1,7 @@
 package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.BestiarySyncPacket;
 import net.minecraft.nbt.CompoundTag;
@@ -78,14 +79,15 @@ public class BestiaryManager {
     public void onKillNoSync(ResourceLocation mobId){
         int newKills = killCounts.getOrDefault(mobId, 0) + 1;
         killCounts.put(mobId, newKills);
-        cachedData.put(mobId, computeBestiaryData(newKills, specialBuffPoints.get(mobId)));
+        cachedData.put(mobId, computeBestiaryData(
+                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
     }
 
     public void onKillWithSync(ServerPlayer player, ResourceLocation mobId){
         int newKills = killCounts.getOrDefault(mobId, 0) + 1;
         killCounts.put(mobId, newKills);
         cachedData.put(mobId, computeBestiaryData(
-                newKills, specialBuffPoints.get(mobId)));
+                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
         syncToPlayer(player);
     }
 
@@ -146,7 +148,13 @@ public class BestiaryManager {
         int remaining = levelAndRemaining.getB();
         MobBuff mobBuff = computeMobBuff(level);
 
-        return new BestiaryData(kills, level, remaining, mobBuff, spentPoints);
+        int totalPoints = level / 10;
+        int remainingPoints = totalPoints;
+        for(var points : spentPoints.values()){
+            remainingPoints -= points;
+        }
+
+        return new BestiaryData(kills, level, remaining, mobBuff, totalPoints, remainingPoints, spentPoints);
     }
 
     private Pair<Integer, Integer> computeLevelAndRemaining(int kills){

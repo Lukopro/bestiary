@@ -1,14 +1,12 @@
 package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -58,6 +56,7 @@ public class BestiaryEntryScreenComponent {
     private final ResourceLocation mobId;
     private final BestiaryData data;
     private final EntityType<?> entityType;
+    private final BestiaryScreen parentScreen;
 
     private Set<BestiaryTooltip> tooltips = new HashSet<>();
 
@@ -65,10 +64,11 @@ public class BestiaryEntryScreenComponent {
 
     public boolean mouseIsHovering = false;
 
-    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
+    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data, BestiaryScreen parentScreen){
         this.mobId = mobId;
         this.data = data;
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
+        this.parentScreen = parentScreen;
     }
 
     public String getDisplayName(){
@@ -119,7 +119,7 @@ public class BestiaryEntryScreenComponent {
                 x + 168, x + ENTRY_WIDTH - 4,
                 y + TITLE_TEXTURE_HEIGHT + 4, y + ENTRY_HEIGHT - 4,
                 List.of(Component.literal(String.format("%d kills", data.kills())),
-                        Component.literal(String.format("%d needed, %d remaining", (data.level() + 1) * 2, data.remaining())))
+                        Component.literal(String.format("%d needed, %d remaining", (data.level() + 1) * 2, data.remainingKills())))
         ));
 
         this.mouseIsHovering = false;
@@ -176,7 +176,7 @@ public class BestiaryEntryScreenComponent {
         ResourceLocation backgroundTexture = this.mouseIsHovering ? LEVEL_BACKGROUND_LIGHT : LEVEL_BACKGROUND_DARK;
 
         int x = middleX - LEVEL_BAR_WIDTH / 2;
-        int split = Math.round((float)ENTRY_WIDTH * (float)((data.level() + 1) * 2 - data.remaining()) / (float)((data.level() + 1) * 2));
+        int split = Math.round((float)ENTRY_WIDTH * (float)((data.level() + 1) * 2 - data.remainingKills()) / (float)((data.level() + 1) * 2));
 
         guiGraphics.blit(completedTexture, x, y,
                 0, 0,
@@ -266,5 +266,13 @@ public class BestiaryEntryScreenComponent {
         float factor = 20F;
 
         return -Math.round(factor * flatness * sinPitch);
+    }
+
+    public boolean mouseClicked(double mouseX, double mouseY, int button){
+        if(this.mouseIsHovering && button == 0){
+            parentScreen.openFocusedEntryScreenComponent(this.mobId, this.data);
+            return true;
+        }
+        return false;
     }
 }

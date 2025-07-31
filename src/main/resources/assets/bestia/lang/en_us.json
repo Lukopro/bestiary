@@ -1,5 +1,13 @@
 {
   "key.categories.bestiary": "Bestia",
 
-  "key.bestiary.open": "Open Bestiary"
+  "key.bestiary.open": "Open Bestiary",
+
+  "buff.bestia.reroll": "Reroll",
+  "buff.bestia.execute": "Execute",
+  "buff.bestia.lifesteal": "Lifesteal",
+
+  "buff.bestia.reroll.info": "Roll's this mob's loot table %d times.",
+  "buff.bestia.execute.info": "Kills this mob if it's health is below %f%.",
+  "buff.bestia.lifesteal.info": "Heals player for %s% of the damage dealt to this mob."
 }

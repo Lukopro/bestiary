@@ -2,7 +2,7 @@ package net.luko.bestia.server;
 
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryManager;
-import net.luko.bestia.data.MobBuff;
+import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.data.PlayerBestiaryStore;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;

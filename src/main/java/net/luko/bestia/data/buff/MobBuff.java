@@ -1,4 +1,4 @@
-package net.luko.bestia.data;
+package net.luko.bestia.data.buff;
 
 public record MobBuff(
         float damageFactor,
