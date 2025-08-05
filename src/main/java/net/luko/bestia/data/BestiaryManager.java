@@ -20,7 +20,7 @@ import java.util.Map;
 public class BestiaryManager {
     private final Map<ResourceLocation, Integer> killCounts = new HashMap<>();
     private final Map<ResourceLocation, BestiaryData> cachedData = new HashMap<>();
-    private final Map<ResourceLocation, Map<String, Integer>> specialBuffPoints = new HashMap<>();
+    private final Map<ResourceLocation, Map<ResourceLocation, Integer>> specialBuffPoints = new HashMap<>();
 
     public void loadFromNBT(CompoundTag bestiaryTag){
         if(bestiaryTag.contains("Entries")){
@@ -40,17 +40,19 @@ public class BestiaryManager {
                 continue;
             }
             int kills = tag.getInt("kills");
-            Map<String, Integer> spentPoints = loadSpecialBuffs(tag.getCompound("spent_points"));
+            Map<ResourceLocation, Integer> spentPoints = loadSpecialBuffs(tag.getCompound("spent_points"));
             killCounts.put(mobId, kills);
             specialBuffPoints.put(mobId, spentPoints);
             cachedData.put(mobId, computeBestiaryData(kills, spentPoints));
         }
     }
 
-    private Map<String, Integer> loadSpecialBuffs(CompoundTag tag){
-        Map<String, Integer> buffs = new HashMap<>();
+    private Map<ResourceLocation, Integer> loadSpecialBuffs(CompoundTag tag){
+        Map<ResourceLocation, Integer> buffs = new HashMap<>();
         for(String key : tag.getAllKeys()){
-            buffs.put(key, tag.getInt(key));
+            ResourceLocation buffId = ResourceLocation.tryParse(key);
+            if(buffId != null) buffs.put(buffId, tag.getInt(key));
+            else Bestia.LOGGER.warn("Invalid buff ID '{}', skipping.", key);
         }
         return buffs;
     }
@@ -91,7 +93,7 @@ public class BestiaryManager {
         syncToPlayer(player);
     }
 
-    public void onSpendPointNoSync(ResourceLocation mobId, String specialBuff){
+    public void onSpendPointNoSync(ResourceLocation mobId, ResourceLocation specialBuff){
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
@@ -99,7 +101,7 @@ public class BestiaryManager {
         cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
     }
 
-    public void onSpendPointWithSync(ServerPlayer player, ResourceLocation mobId, String specialBuff){
+    public void onSpendPointWithSync(ServerPlayer player, ResourceLocation mobId, ResourceLocation specialBuff){
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
@@ -130,7 +132,7 @@ public class BestiaryManager {
             entryTag.putInt("kills", entry.getValue().kills());
             CompoundTag spentPointsTag = new CompoundTag();
             for(var buff : entry.getValue().spentPoints().entrySet()){
-                spentPointsTag.putInt(buff.getKey(), buff.getValue());
+                spentPointsTag.putInt(buff.getKey().toString(), buff.getValue());
             }
             entryTag.put("spent_points", spentPointsTag);
 
@@ -142,7 +144,7 @@ public class BestiaryManager {
         return tag;
     }
 
-    private BestiaryData computeBestiaryData(int kills, Map<String, Integer> spentPoints){
+    private BestiaryData computeBestiaryData(int kills, Map<ResourceLocation, Integer> spentPoints){
         Pair<Integer, Integer> levelAndRemaining = computeLevelAndRemaining(kills);
         int level = levelAndRemaining.getA();
         int remaining = levelAndRemaining.getB();
@@ -161,6 +163,10 @@ public class BestiaryManager {
         int level = Mth.floor((-1 + Math.sqrt(1 + 4 * kills)) / 2.0);
         int remaining = (level + 1) * (level + 2) - kills;
         return new Pair<>(level, remaining);
+    }
+
+    public static int neededForLevel(int level){
+        return 2 * level;
     }
 
     private MobBuff computeMobBuff(int level){

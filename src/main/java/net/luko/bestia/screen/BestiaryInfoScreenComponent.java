@@ -1,10 +1,12 @@
 package net.luko.bestia.screen;
 
+import net.luko.bestia.Bestia;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraftforge.common.util.LogicalSidedProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +26,8 @@ public class BestiaryInfoScreenComponent extends BestiarySideScreenComponent{
 
     public BestiaryInfoScreenComponent(int x, int y, int width, BestiaryScreen parentScreen){
         super(x, y, width, parentScreen);
-
         this.wrappedLines = getWrappedLines();
+        this.finalizeLayout();
     }
 
     @Override
@@ -46,9 +48,7 @@ public class BestiaryInfoScreenComponent extends BestiarySideScreenComponent{
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY){
-        super.render(guiGraphics, mouseX, mouseY);
-
+    public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY){
         this.drawText(guiGraphics,
                 x + BORDER_SIZE + PADDING, y + BORDER_SIZE + PADDING);
     }

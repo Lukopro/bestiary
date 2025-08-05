@@ -3,11 +3,15 @@
 
   "key.bestiary.open": "Open Bestiary",
 
-  "buff.bestia.reroll": "Reroll",
-  "buff.bestia.execute": "Execute",
-  "buff.bestia.lifesteal": "Lifesteal",
+  "buff.special.bestia.reroll": "Reroll",
+  "buff.special.bestia.execute": "Execute",
+  "buff.special.bestia.lifesteal": "Lifesteal",
 
-  "buff.bestia.reroll.info": "Roll's this mob's loot table %d times.",
-  "buff.bestia.execute.info": "Kills this mob if it's health is below %f%.",
-  "buff.bestia.lifesteal.info": "Heals player for %s% of the damage dealt to this mob."
+  "buff.special.bestia.reroll.info": "Roll's this mob's loot table %s times.",
+  "buff.special.bestia.execute.info": "Kills this mob if it's health is below %s%%.",
+  "buff.special.bestia.lifesteal.info": "Heals player for %s%% of the damage dealt to this mob.",
+
+  "buff.special.bestia.reroll.info.unleveled": "Roll this mob's loot table more than once.",
+  "buff.special.bestia.execute.info.unleveled": "Kill this mob if its health is below a certain percent.",
+  "buff.special.bestia.lifesteal.info.unleveled": "Heals player upon damaging this mob."
 }

@@ -61,16 +61,18 @@ public class BestiaryScreen extends Screen {
     private UnfocusableButton infoToggleButton;
     private static boolean shownBefore = false;
 
-    private static int MARGIN = 4;
+    public static final int MARGIN = 4;
 
     private float scrollAmount = 0F;
     private int totalContentHeight = 0;
 
     private int leftPosPrev;
 
+    private boolean onlySideScreen = false;
+    private int sideScreenWidth = 0;
+
     public BestiaryScreen(Map<ResourceLocation, BestiaryData> entries) {
         super(Component.literal("Bestiary"));
-
         for(var entry : entries.entrySet()){
             this.bestiaryEntryScreenComponents.add(
                     new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
@@ -109,8 +111,7 @@ public class BestiaryScreen extends Screen {
                     if(this.activeSideScreenComponent instanceof BestiaryInfoScreenComponent) this.clearSideScreenComponent();
                     else this.openInfoScreenComponent();
                     shownBefore = true;
-                }
-        );
+                });
 
         this.addRenderableWidget(infoToggleButton);
 
@@ -119,20 +120,44 @@ public class BestiaryScreen extends Screen {
     }
 
     public void openInfoScreenComponent(){
+        this.clearSideScreenComponent();
+        int maxWidth = 200;
+        this.sideScreenWidth = this.getSideScreenComponentWidth(maxWidth, true);
+
+        int maxWidthToRemoveMainPanel = 40;
+        if(this.sideScreenWidth < maxWidthToRemoveMainPanel){
+            this.sideScreenWidth = this.getSideScreenComponentWidth(maxWidth, false);
+            this.onlySideScreen = true;
+        }
+
+        int mainPanelWidthAdjustment = this.onlySideScreen ? 0 : PANEL_BLIT_WIDTH;
+
         this.activeSideScreenComponent = new BestiaryInfoScreenComponent(
-                this.leftPos + PANEL_BLIT_WIDTH + MARGIN,
+                this.leftPos + mainPanelWidthAdjustment + MARGIN,
                 this.topPos + PANEL_TOP_BLIT_HEIGHT - 6,
-                this.getSideScreenComponentWidth(),
+                this.sideScreenWidth,
                 this
         );
         this.updateLeftPosMoveTo();
     }
 
     public void openFocusedEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
+        this.clearSideScreenComponent();
+        int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
+        this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);
+
+        int maxWidthToRemoveMainPanel = BestiaryEntryScreenComponent.ENTRY_WIDTH;
+        if(this.sideScreenWidth < maxWidthToRemoveMainPanel){
+            this.sideScreenWidth = this.getSideScreenComponentWidth(max, false);
+            this.onlySideScreen = true;
+        }
+
+        int mainPanelWidthAdjustment = this.onlySideScreen ? 0 : PANEL_BLIT_WIDTH;
+
         this.activeSideScreenComponent = new FocusedBestiaryEntryScreenComponent(
-                this.leftPos + PANEL_BLIT_WIDTH + MARGIN,
+                this.leftPos + mainPanelWidthAdjustment + MARGIN,
                 this.topPos + PANEL_TOP_BLIT_HEIGHT - 6,
-                this.getSideScreenComponentWidth(),
+                this.sideScreenWidth,
                 this,
                 mobId, data
         );
@@ -141,20 +166,25 @@ public class BestiaryScreen extends Screen {
 
     public void clearSideScreenComponent(){
         this.activeSideScreenComponent = null;
+        this.onlySideScreen = false;
+        this.sideScreenWidth = 0;
         this.updateLeftPosMoveTo();
         shownBefore = true;
     }
 
-    private int getSideScreenComponentWidth(){
-        int maxPanelWidth = 240;
-
-        int availableWidth = this.width - PANEL_BLIT_WIDTH - 3 * MARGIN;
-        return Math.min(maxPanelWidth, availableWidth);
+    private int getSideScreenComponentWidth(int max, boolean withMain){
+        int availableWidth = withMain
+                ? this.width - PANEL_BLIT_WIDTH - 3 * MARGIN
+                : this.width - 3 * MARGIN;
+        return Math.min(max, availableWidth);
     }
 
     public void updateLeftPosMoveTo(){
-        this.leftPosMoveTo = Math.max(activeSideScreenComponent != null
-                        ? (this.width - PANEL_BLIT_WIDTH - this.getSideScreenComponentWidth()) / 2 - 2
+
+        this.leftPosMoveTo = this.onlySideScreen
+                ? (this.width - this.sideScreenWidth - MARGIN) / 2
+                : Math.max(activeSideScreenComponent != null
+                        ? (this.width - PANEL_BLIT_WIDTH - this.sideScreenWidth) / 2 - 2
                         : (this.width - PANEL_BLIT_WIDTH) / 2,
                 MARGIN);
     }
@@ -165,9 +195,20 @@ public class BestiaryScreen extends Screen {
     }
 
     public void updatePositions(){
-        if(activeSideScreenComponent != null) activeSideScreenComponent.moveX(this.leftPos + PANEL_BLIT_WIDTH + MARGIN);
-        searchBox.setX(this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90);
-        infoToggleButton.setX(this.leftPos + PANEL_BLIT_WIDTH - 72);
+        int mainPanelWidthAdjustment = this.onlySideScreen ? 0 : PANEL_BLIT_WIDTH;
+        if(activeSideScreenComponent != null){
+            activeSideScreenComponent.moveX(
+                    this.leftPos + mainPanelWidthAdjustment + MARGIN);
+        }
+        if(onlySideScreen) {
+            this.searchBox.visible = false;
+            this.infoToggleButton.visible = false;
+        } else {
+            this.searchBox.visible = true;
+            this.infoToggleButton.visible = true;
+            this.searchBox.setX(this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90);
+            this.infoToggleButton.setX(this.leftPos + PANEL_BLIT_WIDTH - 72);
+        }
     }
 
     private void onSearchChanged(String newText){
@@ -197,25 +238,33 @@ public class BestiaryScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick){
         if(this.leftPos != this.leftPosMoveTo) updateLeftPos();
+        renderBackground(guiGraphics);
 
         // I built everything off of leftPos, which is not interpolated between partial ticks. Instead of rewriting everything, I interpolate it now and set it back.
         int uninterpolatedLeftPos = this.leftPos;
         this.leftPos = (int) (this.leftPosPrev + (this.leftPos - leftPosPrev) * partialTick);
 
-        //Bestia.LOGGER.warn("leftPos: {}, uninterpolatedLeftPos: {}, leftPosMoveTo: {}", this.leftPos, uninterpolatedLeftPos, this.leftPosMoveTo);
+        if(this.activeSideScreenComponent != null) this.activeSideScreenComponent.render(guiGraphics, mouseX, mouseY);
+
         updatePositions();
 
-        renderBackground(guiGraphics);
+        if(!this.onlySideScreen){
+            drawPanel(guiGraphics);
 
-        drawPanel(guiGraphics);
-
-        renderEntries(guiGraphics, mouseX, mouseY);
-
-        if(this.activeSideScreenComponent != null) this.activeSideScreenComponent.render(guiGraphics, mouseX, mouseY);
+            renderEntries(guiGraphics, mouseX, mouseY);
+        }
 
         this.leftPos = uninterpolatedLeftPos;
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+    public void addButton(UnfocusableButton button){
+        this.addRenderableWidget(button);
+    }
+
+    public void removeButton(UnfocusableButton button){
+        this.removeWidget(button);
     }
 
     private void drawPanel(GuiGraphics guiGraphics){
@@ -308,18 +357,25 @@ public class BestiaryScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta){
-        this.scrollAmount -= (float)delta * (ENTRY_HEIGHT / 2f);
+        if(!onlySideScreen && mouseInScissor((int)mouseX, (int)mouseY)) {
+            this.scrollAmount -= (float) delta * 30F;
 
-        int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
-        float maxScroll = Math.max(0, totalContentHeight - visibleHeight);
+            int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
+            float maxScroll = Math.max(0, totalContentHeight - visibleHeight);
 
-        this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
-        return true;
+            this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
+            return true;
+        }
+
+        if(this.activeSideScreenComponent instanceof FocusedBestiaryEntryScreenComponent entryScreen
+                && entryScreen.mouseScrolled(mouseX, mouseY, delta)) return true;
+
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button){
-        for(var entry : filteredEntries) if(entry.mouseClicked(mouseX, mouseY, button)) return true;
+        if(!onlySideScreen) for(var entry : filteredEntries) if(entry.mouseClicked(mouseX, mouseY, button)) return true;
         if(this.activeSideScreenComponent != null && activeSideScreenComponent.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }

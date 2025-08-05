@@ -16,8 +16,8 @@ public class ClientInputHandler {
     public static void onClientTick(TickEvent.ClientTickEvent event){
         if(event.phase == TickEvent.Phase.END){
             while(ModKeybinds.KEY_OPEN_BESTIARY.get().consumeClick()){
+                ClientBestiaryData.scheduleScreenOpenAfterSync();
                 ModPackets.CHANNEL.sendToServer(new RequestBestiarySyncPacket());
-                Minecraft.getInstance().setScreen(new BestiaryScreen(ClientBestiaryData.getAll()));
             }
         }
     }

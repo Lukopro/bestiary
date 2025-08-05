@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 
 import java.util.HashSet;
@@ -56,7 +57,7 @@ public class BestiaryEntryScreenComponent {
     private final ResourceLocation mobId;
     private final BestiaryData data;
     private final EntityType<?> entityType;
-    private final BestiaryScreen parentScreen;
+    private final @Nullable BestiaryScreen parentScreen;
 
     private Set<BestiaryTooltip> tooltips = new HashSet<>();
 
@@ -64,7 +65,7 @@ public class BestiaryEntryScreenComponent {
 
     public boolean mouseIsHovering = false;
 
-    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data, BestiaryScreen parentScreen){
+    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data, @Nullable BestiaryScreen parentScreen){
         this.mobId = mobId;
         this.data = data;
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
@@ -176,7 +177,7 @@ public class BestiaryEntryScreenComponent {
         ResourceLocation backgroundTexture = this.mouseIsHovering ? LEVEL_BACKGROUND_LIGHT : LEVEL_BACKGROUND_DARK;
 
         int x = middleX - LEVEL_BAR_WIDTH / 2;
-        int split = Math.round((float)ENTRY_WIDTH * (float)((data.level() + 1) * 2 - data.remainingKills()) / (float)((data.level() + 1) * 2));
+        int split = Math.round((float)ENTRY_WIDTH * (float)(data.neededForNextLevel() - data.remainingKills()) / (float)data.neededForNextLevel());
 
         guiGraphics.blit(completedTexture, x, y,
                 0, 0,
@@ -270,7 +271,7 @@ public class BestiaryEntryScreenComponent {
 
     public boolean mouseClicked(double mouseX, double mouseY, int button){
         if(this.mouseIsHovering && button == 0){
-            parentScreen.openFocusedEntryScreenComponent(this.mobId, this.data);
+            if(this.parentScreen != null) parentScreen.openFocusedEntryScreenComponent(this.mobId, this.data);
             return true;
         }
         return false;

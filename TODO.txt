@@ -6,3 +6,5 @@
 - Basic buffs for every level, get a point every 10 levels, use for special buffs?
 - Expand button in bestiary (2x2 entries in same space)
 - Persistent config option for intro panel
+- Loot info for mobs
+- More scrolling (drag mouse, middle mouse click, sidebar)

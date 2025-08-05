@@ -22,5 +22,10 @@ public class ModPackets {
                 RequestBestiarySyncPacket::encode,
                 RequestBestiarySyncPacket::decode,
                 RequestBestiarySyncPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, SpendPointPacket.class,
+                SpendPointPacket::encode,
+                SpendPointPacket::decode,
+                SpendPointPacket::handle);
     }
 }
