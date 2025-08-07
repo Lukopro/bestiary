@@ -222,7 +222,17 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         float splitFactor = ((float)this.data.kills() - (float)BestiaryData.totalNeededForLevel(lastTenth))
                 / ((float)BestiaryData.totalNeededForLevel(nextTenth) - (float)BestiaryData.totalNeededForLevel(lastTenth));
+        int prevY = nextY;
         nextY = drawLevelBar(guiGraphics, x + lastTenthWidth + 2, rightX - nextTenthWidth - 2, nextY, splitFactor);
+
+        this.tooltips.add(new BestiaryTooltip(
+                x + lastTenthWidth + 2, rightX - nextTenthWidth - 2,
+                prevY, nextY,
+                List.of(Component.literal(String.format("%.1f%% (%d/%d kills)",
+                        splitFactor * 100F,
+                        this.data.kills() - BestiaryData.totalNeededForLevel(lastTenth),
+                        BestiaryData.totalNeededForLevel(nextTenth) - BestiaryData.totalNeededForLevel(lastTenth))))));
+
         return nextY;
     }
 
@@ -326,7 +336,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         if(blitSplit < leftMiddleBlit){
             guiGraphics.blit(LEVEL_BAR_COMPLETED_TEXTURE, x1, y,
                     0, 0,
-                    uvSplit, LEVEL_BAR_HEIGHT,
+                    uvSplit + 3, LEVEL_BAR_HEIGHT,
                     LEVEL_BAR_WIDTH, LEVEL_BAR_HEIGHT);
             guiGraphics.blit(LEVEL_BAR_BACKGROUND_TEXTURE, blitSplit - 1, y,
                     blitSplit <= x1 + 1 ? 0 : uvSplit, 0,

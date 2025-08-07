@@ -8,6 +8,7 @@ import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -160,10 +161,10 @@ public class ServerModEvents {
         if(threshold <= 0F) return;
 
         if(entity.getHealth() <= entity.getMaxHealth() * threshold){
-            DamageType type = player.server.registryAccess()
-                    .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY).get(EXECUTE_SOURCE);
-            if(type == null) return;
-            entity.hurt(new DamageSource(Holder.direct(type)), entity.getMaxHealth());
+            Holder<DamageType> holder = player.server.registryAccess()
+                    .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, EXECUTE_SOURCE));
+
+            entity.hurt(new DamageSource(holder), entity.getMaxHealth());
 
             event.setCanceled(true);
         }
@@ -180,7 +181,6 @@ public class ServerModEvents {
         if(lifesteal <= 0F) return;
 
         player.heal(event.getAmount() * lifesteal);
-        Bestia.LOGGER.info("{}, {}, {}", event.getAmount(), lifesteal,event.getAmount() * lifesteal );
     }
 
 }
