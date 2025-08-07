@@ -1,6 +1,7 @@
 package net.luko.bestia;
 
 import com.mojang.logging.LogUtils;
+import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.network.ModPackets;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,6 +21,8 @@ public class Bestia
     public Bestia(FMLJavaModLoadingContext context)
     {
         IEventBus modEventBus = context.getModEventBus();
+
+        context.registerConfig(ModConfig.Type.COMMON, BestiaConfig.COMMON_CONFIG);
 
         modEventBus.addListener(this::commonSetup);
 

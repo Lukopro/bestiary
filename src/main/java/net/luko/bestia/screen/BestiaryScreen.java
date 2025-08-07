@@ -2,6 +2,7 @@ package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -151,6 +152,7 @@ public class BestiaryScreen extends Screen {
     }
 
     public void openFocusedEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
+        if(!BestiaConfig.ENABLE_SPECIAL_BUFFS.get()) return;
         this.clearSideScreenComponent();
         int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
         this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);

@@ -152,7 +152,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int adjustedY = this.y + BORDER_SIZE + PADDING;
         float headerScale = (float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH;
         poseStack.pushPose();
-        poseStack.scale(headerScale, headerScale, headerScale);
+        poseStack.scale(headerScale, headerScale, 1.0F);
         this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale));
         poseStack.popPose();
 
@@ -184,7 +184,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                 button.setY(nextY + 14 - (int)this.scrollAmount);
 
                 poseStack.pushPose();
-                poseStack.scale(BUFF_TITLE_SCALE, BUFF_TITLE_SCALE, BUFF_TITLE_SCALE);
+                poseStack.scale(BUFF_TITLE_SCALE, BUFF_TITLE_SCALE, 1.0F);
 
                 int wrapY = drawComponentWrapped(guiGraphics,
                         Component.literal(String.format(
@@ -329,7 +329,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                     uvSplit, LEVEL_BAR_HEIGHT,
                     LEVEL_BAR_WIDTH, LEVEL_BAR_HEIGHT);
             guiGraphics.blit(LEVEL_BAR_BACKGROUND_TEXTURE, blitSplit - 1, y,
-                    uvSplit, 0,
+                    blitSplit <= x1 + 1 ? 0 : uvSplit, 0,
                     leftMiddleBlit - blitSplit + 1, LEVEL_BAR_HEIGHT,
                     LEVEL_BAR_WIDTH, LEVEL_BAR_HEIGHT);
 

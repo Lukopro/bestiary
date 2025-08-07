@@ -1,5 +1,6 @@
 package net.luko.bestia.network;
 
+import net.luko.bestia.Bestia;
 import net.luko.bestia.client.ClientBestiaryData;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;

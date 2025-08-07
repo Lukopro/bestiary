@@ -1,0 +1,9 @@
+{
+  "message_id": "execute",
+  "scaling": "never",
+  "exhaustion": 0.1,
+  "effects": [
+    "bypass_armor",
+    "bypass_magic"
+  ]
+}

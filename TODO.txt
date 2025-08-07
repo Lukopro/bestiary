@@ -8,3 +8,4 @@
 - Persistent config option for intro panel
 - Loot info for mobs
 - More scrolling (drag mouse, middle mouse click, sidebar)
+- Max level (config)

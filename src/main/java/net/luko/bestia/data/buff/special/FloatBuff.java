@@ -21,6 +21,6 @@ public class FloatBuff extends SpecialBuff<Float>{
     public String getInfo(int level){
         String baseInfo = getBaseInfo(level);
         if(level == 0) return baseInfo;
-        return String.format(baseInfo, displayAsPercent ? computeValue(level) * 100 : computeValue(level));
+        return String.format(baseInfo, displayAsPercent ? String.format("%.1f", computeValue(level) * 100) : String.format("%.3f", computeValue(level)));
     }
 }

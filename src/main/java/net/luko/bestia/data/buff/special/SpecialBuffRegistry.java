@@ -11,7 +11,7 @@ public class SpecialBuffRegistry {
     private static final Map<ResourceLocation, SpecialBuff<?>> BUFFS = new HashMap<>();
 
     public static final SpecialBuff<Integer> REROLL =
-            register(new IntegerBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reroll"), 1, 1, 3));
+            register(new IntegerBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reroll"), 0, 1, 3));
     public static final SpecialBuff<Float> EXECUTE =
             register(new FloatBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute"), 0.0F, 0.1F, 3, true));
     public static final SpecialBuff<Float> LIFESTEAL =

@@ -14,6 +14,11 @@ public record BestiaryData(
         int remainingPoints,
         Map<ResourceLocation, Integer> spentPoints
 ) {
+    @Override
+    public int remainingPoints(){
+        return remainingPoints;
+    }
+
     public int neededForNextLevel(){
         return (level + 1) * 2;
     }

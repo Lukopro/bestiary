@@ -2,13 +2,16 @@ package net.luko.bestia.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,6 +21,12 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID)
 public class ModCommands {
+
+    public static final SuggestionProvider<CommandSourceStack> ENTITY_SUGGESTIONS = (ctx, builder) ->
+            SharedSuggestionProvider.suggestResource(
+                    BuiltInRegistries.ENTITY_TYPE.keySet(),
+                    builder
+            );
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event){
@@ -29,6 +38,7 @@ public class ModCommands {
                         .then(Commands.literal("level")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("mob", ResourceLocationArgument.id())
+                                                .suggests(ENTITY_SUGGESTIONS)
                                                 .then(Commands.argument("value", IntegerArgumentType.integer(0))
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");

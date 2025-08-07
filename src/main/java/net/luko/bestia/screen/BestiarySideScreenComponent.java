@@ -71,6 +71,7 @@ public abstract class BestiarySideScreenComponent {
         closeButton.render(guiGraphics, mouseX, mouseY, 0F);
 
         PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
         poseStack.translate(0, (int)-scrollAmount, 0);
 
         Minecraft mc = Minecraft.getInstance();

@@ -1,7 +1,9 @@
 package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.data.buff.MobBuff;
+import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.BestiarySyncPacket;
@@ -102,12 +104,18 @@ public class BestiaryManager {
         syncToPlayer(player);
     }
 
-
     public void onSpendPointNoSync(ResourceLocation mobId, ResourceLocation specialBuff){
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
-        if(specialBuffPoints.get(mobId).get(specialBuff) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()) return;
+        if(getSpecialBuffLevel(SpecialBuffRegistry.get(specialBuff), mobId) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()){
+            Bestia.LOGGER.warn("Client attempted to spend buff point, but buff is maxed.");
+            return;
+        }
+        if(cachedData.get(mobId).remainingPoints() <= 0){
+            Bestia.LOGGER.warn("Client attempted to spend buff point, but no points are available.");
+            return;
+        }
         specialBuffPoints.get(mobId).put(specialBuff, newPoints);
         cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
     }
@@ -116,7 +124,14 @@ public class BestiaryManager {
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
-        if(specialBuffPoints.get(mobId).get(specialBuff) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()) return;
+        if(getSpecialBuffLevel(SpecialBuffRegistry.get(specialBuff), mobId) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()){
+            Bestia.LOGGER.warn("Client attempted to spend buff point, but buff is maxed.");
+            return;
+        }
+        if(cachedData.get(mobId).remainingPoints() <= 0){
+            Bestia.LOGGER.warn("Client attempted to spend buff point, but no points are available.");
+            return;
+        }
         specialBuffPoints.get(mobId).put(specialBuff, newPoints);
         cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
         syncToPlayer(player);
@@ -192,5 +207,15 @@ public class BestiaryManager {
                 PacketDistributor.PLAYER.with(() -> player),
                 new BestiarySyncPacket(this.getAllData())
         );
+    }
+
+    public int getSpecialBuffLevel(SpecialBuff<?> buff, ResourceLocation mobId){
+        return BestiaConfig.ENABLE_SPECIAL_BUFFS.get()
+                ? specialBuffPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
+                : 0;
+    }
+
+    public <T> T getSpecialBuffValue(SpecialBuff<T> buff, ResourceLocation mobId){
+        return buff.computeValue(getSpecialBuffLevel(buff, mobId));
     }
 }

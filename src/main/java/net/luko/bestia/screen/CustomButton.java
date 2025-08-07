@@ -13,7 +13,6 @@ public class CustomButton extends Button {
     private int uvX;
     private int uvY;
     float scale = 1.0F;
-    boolean scaled = false;
 
     protected CustomButton(int pX, int pY, int pWidth, int pHeight, OnPress pOnPress,
                            ResourceLocation texture, ResourceLocation hoveredTexture,
@@ -22,7 +21,6 @@ public class CustomButton extends Button {
         this.texture = texture;
         this.hoveredTexture = hoveredTexture;
         this.scale = scale;
-        this.scaled = true;
         this.uvX = (int)(this.width / scale);
         this.uvY = (int)(this.height / scale);
     }
@@ -62,14 +60,11 @@ public class CustomButton extends Button {
         }
 
         PoseStack poseStack = guiGraphics.pose();
-        int x = this.getX();
-        int y = this.getY();
-        if(this.scaled){
-            poseStack.pushPose();
-            poseStack.scale(this.scale, this.scale, this.scale);
-            x = ((int)((float)this.getX() / scale));
-            y = ((int)((float)this.getY() / scale));
-        }
+
+        poseStack.pushPose();
+        poseStack.scale(this.scale, this.scale, 1.0F);
+        int x = ((int)((float)this.getX() / scale));
+        int y = ((int)((float)this.getY() / scale));
 
         ResourceLocation activeTexture;
         if(this.isHovered && this.hoveredTexture != null) activeTexture = this.hoveredTexture;
@@ -81,7 +76,7 @@ public class CustomButton extends Button {
                 this.uvX, this.uvY,
                 this.uvX, this.uvY);
 
-        if(scaled) poseStack.popPose();
+        poseStack.popPose();
     }
 
     private int minY = 0;
