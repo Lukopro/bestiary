@@ -4,10 +4,12 @@ import net.minecraft.resources.ResourceLocation;
 
 public class FloatBuff extends SpecialBuff<Float>{
     protected final float increment;
+    protected final boolean displayAsPercent;
 
-    public FloatBuff(ResourceLocation id, float defaultValue, float increment, int maxLevel) {
+    public FloatBuff(ResourceLocation id, float defaultValue, float increment, int maxLevel, boolean displayAsPercent) {
         super(id, defaultValue, maxLevel);
         this.increment = increment;
+        this.displayAsPercent = displayAsPercent;
     }
 
     @Override
@@ -19,6 +21,6 @@ public class FloatBuff extends SpecialBuff<Float>{
     public String getInfo(int level){
         String baseInfo = getBaseInfo(level);
         if(level == 0) return baseInfo;
-        return String.format(baseInfo, computeValue(level));
+        return String.format(baseInfo, displayAsPercent ? computeValue(level) * 100 : computeValue(level));
     }
 }

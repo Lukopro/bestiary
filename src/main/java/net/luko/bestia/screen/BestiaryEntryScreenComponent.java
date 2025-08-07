@@ -99,6 +99,8 @@ public class BestiaryEntryScreenComponent {
 
         drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
 
+        drawKills(guiGraphics, x + ENTRY_WIDTH - 2, y, String.format("%d kill%s", this.data.kills(), this.data.kills() == 1 ? "" : "s"));
+
         drawComponent(guiGraphics, x, y + TITLE_TEXTURE_HEIGHT);
 
         drawLevelBar(guiGraphics, x + ENTRY_WIDTH / 2, y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT);
@@ -117,10 +119,13 @@ public class BestiaryEntryScreenComponent {
                         x + 52, y + 40, 0xAAAAAA);
 
         this.tooltips.add(new BestiaryTooltip(
-                x + 168, x + ENTRY_WIDTH - 4,
-                y + TITLE_TEXTURE_HEIGHT + 4, y + ENTRY_HEIGHT - 4,
-                List.of(Component.literal(String.format("%d kills", data.kills())),
-                        Component.literal(String.format("%d needed, %d remaining", (data.level() + 1) * 2, data.remainingKills())))
+                x, x + ENTRY_WIDTH,
+                y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT, y + ENTRY_HEIGHT,
+                List.of(Component.literal(String.format(
+                        "%.1f%% (%d/%d kills)",
+                        (1F - ((float)this.data.remainingKills() / (float)this.data.neededForNextLevel())) * 100F,
+                        this.data.neededForNextLevel() - this.data.remainingKills(),
+                        this.data.neededForNextLevel())))
         ));
 
         this.mouseIsHovering = false;
@@ -137,15 +142,44 @@ public class BestiaryEntryScreenComponent {
     }
 
     private void drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {
-        int titleWidth = FONT.width(name);
+        int textWidth = FONT.width(name);
+        ResourceLocation backgroundTexture = mouseIsHovering ? TITLE_TEXTURE_LIGHT : TITLE_TEXTURE_DARK;
+
+        guiGraphics.blit(backgroundTexture, x, y,
+                0, 0,
+                TITLE_TEXTURE_LEFT_WIDTH, TITLE_TEXTURE_HEIGHT,
+                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+
+        int middleXEnd = x + TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + textWidth;
+
+        for(int middleXBlit = x + TITLE_TEXTURE_LEFT_WIDTH; middleXBlit < middleXEnd; middleXBlit += TITLE_TEXTURE_MIDDLE_WIDTH){
+            int blitWidth = Math.min(TITLE_TEXTURE_MIDDLE_WIDTH, middleXEnd - middleXBlit);
+            guiGraphics.blit(backgroundTexture, middleXBlit, y,
+                    TITLE_TEXTURE_LEFT_WIDTH, 0,
+                    blitWidth, TITLE_TEXTURE_HEIGHT,
+                    TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+        }
+
+        guiGraphics.blit(backgroundTexture, middleXEnd, y,
+                TITLE_TEXTURE_WIDTH - TITLE_TEXTURE_RIGHT_WIDTH, 0,
+                TITLE_TEXTURE_RIGHT_WIDTH, TITLE_TEXTURE_HEIGHT,
+                TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
+
+        guiGraphics.drawString(FONT, name,
+                x + TITLE_TEXTURE_LEFT_WIDTH + xPadding, y + 3, 0xFFFFFF);
+    }
+
+    private void drawKills(GuiGraphics guiGraphics, int maxX, int y, String kills){
+        int textWidth = FONT.width(kills);
         ResourceLocation titleTexture = mouseIsHovering ? TITLE_TEXTURE_LIGHT : TITLE_TEXTURE_DARK;
+        int x = maxX - xPadding * 2 - TITLE_TEXTURE_RIGHT_WIDTH - TITLE_TEXTURE_LEFT_WIDTH - textWidth;
 
         guiGraphics.blit(titleTexture, x, y,
                 0, 0,
                 TITLE_TEXTURE_LEFT_WIDTH, TITLE_TEXTURE_HEIGHT,
                 TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
 
-        int middleXEnd = x + TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + titleWidth;
+        int middleXEnd = x + TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + textWidth;
 
         for(int middleXBlit = x + TITLE_TEXTURE_LEFT_WIDTH; middleXBlit < middleXEnd; middleXBlit += TITLE_TEXTURE_MIDDLE_WIDTH){
             int blitWidth = Math.min(TITLE_TEXTURE_MIDDLE_WIDTH, middleXEnd - middleXBlit);
@@ -160,7 +194,7 @@ public class BestiaryEntryScreenComponent {
                 TITLE_TEXTURE_RIGHT_WIDTH, TITLE_TEXTURE_HEIGHT,
                 TITLE_TEXTURE_WIDTH, TITLE_TEXTURE_HEIGHT);
 
-        guiGraphics.drawString(FONT, name,
+        guiGraphics.drawString(FONT, kills,
                 x + TITLE_TEXTURE_LEFT_WIDTH + xPadding, y + 3, 0xFFFFFF);
     }
 

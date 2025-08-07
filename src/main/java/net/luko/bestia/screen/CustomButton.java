@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-public class UnfocusableButton extends Button {
+public class CustomButton extends Button {
     @Nullable private ResourceLocation texture;
     @Nullable private ResourceLocation hoveredTexture;
     private int uvX;
@@ -15,9 +15,9 @@ public class UnfocusableButton extends Button {
     float scale = 1.0F;
     boolean scaled = false;
 
-    protected UnfocusableButton(int pX, int pY, int pWidth, int pHeight, OnPress pOnPress,
-                                ResourceLocation texture, ResourceLocation hoveredTexture,
-                                float scale) {
+    protected CustomButton(int pX, int pY, int pWidth, int pHeight, OnPress pOnPress,
+                           ResourceLocation texture, ResourceLocation hoveredTexture,
+                           float scale) {
         super(pX, pY, pWidth, pHeight, Component.literal(""), pOnPress, Button.DEFAULT_NARRATION);
         this.texture = texture;
         this.hoveredTexture = hoveredTexture;
@@ -27,7 +27,7 @@ public class UnfocusableButton extends Button {
         this.uvY = (int)(this.height / scale);
     }
 
-    protected UnfocusableButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress) {
+    protected CustomButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress) {
         super(pX, pY, pWidth, pHeight, pMessage, pOnPress, Button.DEFAULT_NARRATION);
         this.texture = null;
         this.hoveredTexture = null;
@@ -38,6 +38,21 @@ public class UnfocusableButton extends Button {
 
     @Override
     public boolean isFocused(){return false;}
+
+    @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
+        if (this.visible) {
+            this.isHovered = this.isMouseOver(mouseX, mouseY);
+
+            this.renderWidget(guiGraphics, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    public void setActive(boolean active){
+        this.active = active;
+    }
+
+
 
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
@@ -67,5 +82,19 @@ public class UnfocusableButton extends Button {
                 this.uvX, this.uvY);
 
         if(scaled) poseStack.popPose();
+    }
+
+    private int minY = 0;
+    private int maxY = Integer.MAX_VALUE;
+
+    public void setYClip(int minY, int maxY){
+        this.minY = minY;
+        this.maxY = maxY;
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY){
+        if(mouseY >= this.minY && mouseY <= maxY) return super.isMouseOver(mouseX, mouseY);
+        return false;
     }
 }

@@ -58,7 +58,7 @@ public class BestiaryScreen extends Screen {
     private EditBox searchBox;
 
     private BestiarySideScreenComponent activeSideScreenComponent = null;
-    private UnfocusableButton infoToggleButton;
+    private CustomButton infoToggleButton;
     private static boolean shownBefore = false;
 
     public static final int MARGIN = 4;
@@ -104,7 +104,7 @@ public class BestiaryScreen extends Screen {
         this.searchBox.setVisible(true);
         this.addRenderableWidget(this.searchBox);
 
-        this.infoToggleButton = new UnfocusableButton(
+        this.infoToggleButton = new CustomButton(
                 this.leftPos + PANEL_BLIT_WIDTH - 72, this.topPos + 13, 21, 21,
                 Component.literal("i"),
                 btn -> {
@@ -117,6 +117,15 @@ public class BestiaryScreen extends Screen {
 
         if(!shownBefore) openInfoScreenComponent();
         else clearSideScreenComponent();
+    }
+
+    public void rebuiltEntries(Map<ResourceLocation, BestiaryData> entries){
+        this.bestiaryEntryScreenComponents.clear();
+        for(var entry : entries.entrySet()){
+            this.bestiaryEntryScreenComponents.add(
+                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
+        }
+        this.updateSearch();
     }
 
     public void openInfoScreenComponent(){
@@ -172,6 +181,10 @@ public class BestiaryScreen extends Screen {
         shownBefore = true;
     }
 
+    public BestiarySideScreenComponent getActiveSideScreenComponent(){
+        return this.activeSideScreenComponent;
+    }
+
     private int getSideScreenComponentWidth(int max, boolean withMain){
         int availableWidth = withMain
                 ? this.width - PANEL_BLIT_WIDTH - 3 * MARGIN
@@ -182,7 +195,7 @@ public class BestiaryScreen extends Screen {
     public void updateLeftPosMoveTo(){
 
         this.leftPosMoveTo = this.onlySideScreen
-                ? (this.width - this.sideScreenWidth - MARGIN) / 2
+                ? (this.width - this.sideScreenWidth - 3 * MARGIN) / 2
                 : Math.max(activeSideScreenComponent != null
                         ? (this.width - PANEL_BLIT_WIDTH - this.sideScreenWidth) / 2 - 2
                         : (this.width - PANEL_BLIT_WIDTH) / 2,
@@ -209,6 +222,10 @@ public class BestiaryScreen extends Screen {
             this.searchBox.setX(this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90);
             this.infoToggleButton.setX(this.leftPos + PANEL_BLIT_WIDTH - 72);
         }
+    }
+
+    private void updateSearch(){
+        this.onSearchChanged(this.searchBox.getValue());
     }
 
     private void onSearchChanged(String newText){
@@ -246,6 +263,7 @@ public class BestiaryScreen extends Screen {
 
         if(this.activeSideScreenComponent != null) this.activeSideScreenComponent.render(guiGraphics, mouseX, mouseY);
 
+
         updatePositions();
 
         if(!this.onlySideScreen){
@@ -254,17 +272,15 @@ public class BestiaryScreen extends Screen {
             renderEntries(guiGraphics, mouseX, mouseY);
         }
 
+        List<Component> tooltipToRender = getTooltip(mouseX, mouseY);
+
+        if(tooltipToRender != null) guiGraphics.renderTooltip(
+                Minecraft.getInstance().font, tooltipToRender, Optional.empty(), mouseX, mouseY
+        );
+
         this.leftPos = uninterpolatedLeftPos;
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    public void addButton(UnfocusableButton button){
-        this.addRenderableWidget(button);
-    }
-
-    public void removeButton(UnfocusableButton button){
-        this.removeWidget(button);
     }
 
     private void drawPanel(GuiGraphics guiGraphics){
@@ -323,12 +339,6 @@ public class BestiaryScreen extends Screen {
         }
 
         RenderSystem.disableScissor();
-
-        List<Component> tooltipToRender = getTooltip(mouseX, mouseY);
-
-        if(tooltipToRender != null) guiGraphics.renderTooltip(
-                Minecraft.getInstance().font, tooltipToRender, Optional.empty(), mouseX, mouseY
-        );
     }
 
     private boolean mouseInScissor(int mouseX, int mouseY){
@@ -338,7 +348,7 @@ public class BestiaryScreen extends Screen {
 
     private @Nullable List<Component> getTooltip(int mouseX, int mouseY) {
         List<Component> tooltipToRender = null;
-        if(mouseInScissor(mouseX, mouseY)){
+        if(!this.onlySideScreen && mouseInScissor(mouseX, mouseY)){
             for(var component : bestiaryEntryScreenComponents){
                 for(var tooltip : component.getTooltips()){
                     if(tooltip.contains(mouseX, mouseY)){
@@ -348,6 +358,16 @@ public class BestiaryScreen extends Screen {
                 }
             }
         }
+
+        if(this.activeSideScreenComponent != null){
+            for(var tooltip : this.activeSideScreenComponent.getTooltips()){
+                if(tooltip.contains(mouseX, mouseY)){
+                    tooltipToRender = tooltip.tooltip();
+                    break;
+                }
+            }
+        }
+
         return tooltipToRender;
     }
 

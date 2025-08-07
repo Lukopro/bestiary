@@ -3,6 +3,9 @@ package net.luko.bestia.network;
 import net.luko.bestia.client.ClientBestiaryData;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.BestiaryDataSerializer;
+import net.luko.bestia.screen.BestiaryScreen;
+import net.luko.bestia.screen.FocusedBestiaryEntryScreenComponent;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkEvent;
@@ -39,7 +42,14 @@ public class BestiarySyncPacket {
 
     public static void handle(BestiarySyncPacket packet, Supplier<NetworkEvent.Context> contextSupplier){
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> ClientBestiaryData.set(packet.data));
+        context.enqueueWork(() -> {
+            ClientBestiaryData.set(packet.data);
+            if(Minecraft.getInstance().screen instanceof BestiaryScreen bestiaryScreen
+                    && bestiaryScreen.getActiveSideScreenComponent() instanceof FocusedBestiaryEntryScreenComponent focusedBestiaryEntryScreenComponent){
+                bestiaryScreen.rebuiltEntries(ClientBestiaryData.getAll());
+                focusedBestiaryEntryScreenComponent.refresh(ClientBestiaryData.getFor(focusedBestiaryEntryScreenComponent.getMobId()));
+            }
+        });
         context.setPacketHandled(true);
     }
 }

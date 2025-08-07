@@ -15,4 +15,9 @@ public record BestiaryTooltip(
         return x >= left && x <= right
             && y >= top && y < bottom;
     }
+
+    public BestiaryTooltip scale(float scale, float scrollAmount){
+        return new BestiaryTooltip((int)(left * scale), (int)(right * scale),
+                (int)(top * scale - scrollAmount), (int)(bottom * scale - scrollAmount), tooltip);
+    }
 }

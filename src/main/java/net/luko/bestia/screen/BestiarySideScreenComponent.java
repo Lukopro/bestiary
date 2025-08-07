@@ -9,10 +9,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class BestiarySideScreenComponent {
     protected int x, y;
     protected int width, height;
-    protected UnfocusableButton closeButton;
+    protected CustomButton closeButton;
     protected final BestiaryScreen parentScreen;
     protected final int availableWidth;
 
@@ -26,6 +29,8 @@ public abstract class BestiarySideScreenComponent {
 
     protected float scrollAmount = 0F;
 
+    protected Set<BestiaryTooltip> tooltips = new HashSet<>();
+
     protected static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/side_panel.png");
 
@@ -38,7 +43,7 @@ public abstract class BestiarySideScreenComponent {
         this.width = width;
         this.availableWidth = this.width - (2 * PADDING) - (2 * BORDER_SIZE);
 
-        this.closeButton = new UnfocusableButton(this.x + this.width - 12, this.y,
+        this.closeButton = new CustomButton(this.x + this.width - 12, this.y,
                 12, 12,
                 Component.literal("X"),
                 btn -> this.parentScreen.clearSideScreenComponent()
@@ -60,6 +65,7 @@ public abstract class BestiarySideScreenComponent {
     public abstract int getNeededHeight();
 
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY){
+        this.tooltips.clear();
         blitPanel(guiGraphics);
 
         closeButton.render(guiGraphics, mouseX, mouseY, 0F);
@@ -77,9 +83,9 @@ public abstract class BestiarySideScreenComponent {
 
         RenderSystem.enableScissor(
                 (int)(scissorX * scaleFactor),
-                (int)(windowHeight - (scissorY + scissorHeight) * scaleFactor) + 1,
+                (int)(windowHeight - (scissorY + scissorHeight) * scaleFactor) - 1,
                 (int)(scissorWidth * scaleFactor),
-                (int)(scissorHeight * scaleFactor) + 1
+                (int)(scissorHeight * scaleFactor) + 2
         );
 
         renderContent(guiGraphics, mouseX, mouseY);
@@ -93,8 +99,10 @@ public abstract class BestiarySideScreenComponent {
 
     public abstract void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY);
 
-    public void renderContentButtons(GuiGraphics guiGraphics, int mouseX, int mouseY){
+    public void renderContentButtons(GuiGraphics guiGraphics, int mouseX, int mouseY){}
 
+    public Set<BestiaryTooltip> getTooltips(){
+        return this.tooltips;
     }
 
     public void moveX(int x){
@@ -182,7 +190,7 @@ public abstract class BestiarySideScreenComponent {
         if(this.containsMouse((int)mouseX, (int)mouseY)){
             this.scrollAmount -= (float) delta * 20F;
 
-            float maxScroll = Math.max(0, getNeededHeight() - this.height);
+            float maxScroll = Math.max(0, getNeededHeight() - (this.height - 2 * BORDER_SIZE - 2 * PADDING));
             this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
 
             this.onScroll();

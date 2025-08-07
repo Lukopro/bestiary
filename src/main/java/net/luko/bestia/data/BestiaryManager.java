@@ -2,6 +2,7 @@ package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.buff.MobBuff;
+import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.BestiarySyncPacket;
 import net.minecraft.nbt.CompoundTag;
@@ -93,10 +94,20 @@ public class BestiaryManager {
         syncToPlayer(player);
     }
 
+    public void setLevelAndSync(ServerPlayer player, ResourceLocation mobId, int level){
+        int newKills = BestiaryData.totalNeededForLevel(level);
+        killCounts.put(mobId, newKills);
+        cachedData.put(mobId, computeBestiaryData(
+                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
+        syncToPlayer(player);
+    }
+
+
     public void onSpendPointNoSync(ResourceLocation mobId, ResourceLocation specialBuff){
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
+        if(specialBuffPoints.get(mobId).get(specialBuff) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()) return;
         specialBuffPoints.get(mobId).put(specialBuff, newPoints);
         cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
     }
@@ -105,6 +116,7 @@ public class BestiaryManager {
         int newPoints = specialBuffPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
+        if(specialBuffPoints.get(mobId).get(specialBuff) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()) return;
         specialBuffPoints.get(mobId).put(specialBuff, newPoints);
         cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
         syncToPlayer(player);

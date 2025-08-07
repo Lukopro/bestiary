@@ -1,7 +1,11 @@
 package net.luko.bestia.network;
 
+import net.luko.bestia.client.ClientBestiaryData;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
+import net.luko.bestia.screen.BestiaryScreen;
+import net.luko.bestia.screen.FocusedBestiaryEntryScreenComponent;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

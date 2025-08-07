@@ -5,6 +5,8 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.network.ModPackets;
+import net.luko.bestia.network.SpendPointPacket;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -23,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenComponent{
     protected final ResourceLocation mobId;
-    protected final BestiaryData data;
+    protected BestiaryData data;
     protected final EntityType<?> entityType;
     protected final Font FONT;
     protected static final ResourceLocation LEVEL_BAR_COMPLETED_TEXTURE =
@@ -43,12 +45,14 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected final float BUTTON_SCALE = (float)BUTTON_BLIT_DIMENSIONS / (float)BUTTON_UV_DIMENSIONS;
     protected final float BUFF_TITLE_SCALE = 2.0F;
 
-    protected Map<SpecialBuff<?>, UnfocusableButton> specialBuffButtons = new HashMap<>();
+    protected Map<SpecialBuff<?>, CustomButton> specialBuffButtons = new HashMap<>();
 
     protected ResourceLocation DEFAULT_BUFF_ICON_UNHOVERED =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buffs/default.png");
     protected ResourceLocation DEFAULT_BUFF_ICON_HOVERED =
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buffs/default_hovered.png");
+
+    protected Map<SpecialBuff<?>, Integer> orderedBuffs;
 
     public FocusedBestiaryEntryScreenComponent(int x, int y, int width, BestiaryScreen parentScreen, ResourceLocation mobId, BestiaryData data) {
         super(x, y, width, parentScreen);
@@ -60,13 +64,14 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         this.FONT = Minecraft.getInstance().font;
 
+        this.initializeBuffs();
         this.finalizeLayout();
         this.initializeButtons();
     }
 
     public void initializeButtons(){
         if(this.data.level() >= 10){
-            for(var buff : getBuffs().entrySet()){
+            for(var buff : this.orderedBuffs.entrySet()){
                 ResourceLocation buffId = buff.getKey().getId();
 
                 String iconUnhoveredPath = "textures/gui/bestiary/buff/" + buffId.getPath() + ".png";
@@ -93,14 +98,50 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                 }
 
                 this.specialBuffButtons.put(buff.getKey(),
-                        new UnfocusableButton(0, 0,
+                        new CustomButton(0, 0,
                                 BUTTON_BLIT_DIMENSIONS, BUTTON_BLIT_DIMENSIONS,
-                                btn -> {}/*ModPackets.CHANNEL.sendToServer(new SpendPointPacket(this.mobId, buff.getKey().getId()))*/,
+                                btn -> ModPackets.CHANNEL.sendToServer(new SpendPointPacket(this.mobId, buff.getKey().getId())),
                                 iconUnhoveredTexture, iconHoveredTexture,
                                 BUTTON_SCALE)
                 );
             }
         }
+    }
+
+    public void refresh(BestiaryData newData){
+        this.data = newData;
+        this.refreshBuffs();
+        this.specialBuffButtons.clear();
+        this.initializeButtons();
+    }
+
+    private void initializeBuffs(){
+        Map<SpecialBuff<?>, Integer> existingBuffs = new LinkedHashMap<>();
+
+        for(var entry : this.data.spentPoints().entrySet()){
+            SpecialBuff<?> buff = SpecialBuffRegistry.get(entry.getKey());
+            if(buff != null) existingBuffs.put(buff, entry.getValue());
+        }
+        Map<SpecialBuff<?>, Integer> allOrderedBuffs = new LinkedHashMap<>(existingBuffs.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                )));
+        for(SpecialBuff<?> registered : SpecialBuffRegistry.all()){
+            if(!allOrderedBuffs.containsKey(registered)) allOrderedBuffs.put(registered, 0);
+        }
+        this.orderedBuffs = allOrderedBuffs;
+    }
+
+    private void refreshBuffs(){
+        Map<SpecialBuff<?>, Integer> newBuffs = new LinkedHashMap<>();
+        for(var entry : this.orderedBuffs.entrySet()){
+            newBuffs.put(entry.getKey(), this.data.spentPoints().getOrDefault(entry.getKey().getId(), 0));
+        }
+        this.orderedBuffs = newBuffs;
     }
 
     @Override
@@ -114,6 +155,10 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         poseStack.scale(headerScale, headerScale, headerScale);
         this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale));
         poseStack.popPose();
+
+        for(BestiaryTooltip tooltip : this.entry.getTooltips()){
+            this.tooltips.add(tooltip.scale(headerScale, scrollAmount));
+        }
 
         renderPointSection(guiGraphics,
                 adjustedX, adjustedY + (int)((float)BestiaryEntryScreenComponent.ENTRY_HEIGHT * headerScale),
@@ -131,10 +176,9 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                     0xAAAAAA);
             nextY += 4; // magic padding #2
 
-            Map<SpecialBuff<?>, Integer> buffList = getBuffs();
-            for(var entry : buffList.entrySet()){
+            for(var entry : orderedBuffs.entrySet()){
                 PoseStack poseStack = guiGraphics.pose();
-                UnfocusableButton button = specialBuffButtons.get(entry.getKey());
+                CustomButton button = specialBuffButtons.get(entry.getKey());
 
                 button.setX(x + 2);
                 button.setY(nextY + 14 - (int)this.scrollAmount);
@@ -184,37 +228,46 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
     @Override
     public void renderContentButtons(GuiGraphics guiGraphics, int mouseX, int mouseY){
-        for(UnfocusableButton button : this.specialBuffButtons.values()){
+        for(var entry : this.specialBuffButtons.entrySet()){
+            Component tooltip = null;
+            CustomButton button = entry.getValue();
+            button.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
+
+            button.setActive(true);
+            if(this.data.spentPoints().getOrDefault(entry.getKey().getId(), 0) >= entry.getKey().getMaxLevel()){
+                button.setActive(false);
+                tooltip = Component.literal("Already max level");
+            }
+            if(this.data.remainingPoints() <= 0){
+                button.setActive(false);
+                tooltip = Component.literal("No points to spend");
+            }
+
             button.render(guiGraphics, mouseX, mouseY, 0F);
+
+            if(button.active && this.data.remainingPoints() == this.data.totalPoints()){
+                tooltip = Component.literal("Click to spend point");
+            }
+
+            if(tooltip != null)
+                this.tooltips.add(new BestiaryTooltip(
+                    button.getX(), button.getX() + button.getWidth() - 1,
+                    Math.max(button.getY(), this.y + OUTSIDE_BORDER_SIZE),
+                    Math.min(button.getY() + button.getHeight(), this.y + this.height - OUTSIDE_BORDER_SIZE),
+                    List.of(tooltip)));
         }
     }
 
-    public Collection<UnfocusableButton> getButtons(){
+    public Set<BestiaryTooltip> getTooltips(){
+        return this.tooltips;
+    }
+
+    public Collection<CustomButton> getButtons(){
         return specialBuffButtons.values();
     }
 
     private int scaled(int coordinate, float scale){
         return (int)((float)coordinate / scale);
-    }
-
-    private Map<SpecialBuff<?>, Integer> getBuffs(){
-        Map<SpecialBuff<?>, Integer> existingUnorderedBuffs = new LinkedHashMap<>();
-        for(var entry : this.data.spentPoints().entrySet()){
-            SpecialBuff<?> buff = SpecialBuffRegistry.get(entry.getKey());
-            if(buff != null) existingUnorderedBuffs.put(buff, entry.getValue());
-        }
-        Map<SpecialBuff<?>, Integer> allOrderedBuffs = new LinkedHashMap<>(existingUnorderedBuffs.entrySet().stream()
-                .sorted((a, b) -> b.getValue() - a.getValue())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                )));
-        for(SpecialBuff<?> registered : SpecialBuffRegistry.all()){
-            if(!allOrderedBuffs.containsKey(registered)) allOrderedBuffs.put(registered, 0);
-        }
-        return allOrderedBuffs;
     }
 
     private int drawCenteredComponentWrapped(GuiGraphics guiGraphics, FormattedText text, int minX, int maxX, int y){
@@ -350,7 +403,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                             this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
                     this.availableWidth, 1.0F);
             y += 4; // magic padding #2
-            for(var entry : getBuffs().entrySet()){
+            for(var entry : this.orderedBuffs.entrySet()){
                 y += Math.max((BUTTON_BLIT_DIMENSIONS + 4),
                         getComponentWrappedHeight(Component.literal(String.format(
                                 "%s %s", entry.getKey().getDisplayName(), RomanUtil.toRoman(entry.getValue()))),
@@ -369,10 +422,14 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
     @Override
     public boolean handleContentClick(double mouseX, double mouseY, int button){
-        for(UnfocusableButton btn : this.specialBuffButtons.values()){
+        for(CustomButton btn : this.specialBuffButtons.values()){
             if(btn.mouseClicked(mouseX, mouseY, button)) return true;
         }
 
         return false;
+    }
+
+    public ResourceLocation getMobId() {
+        return this.mobId;
     }
 }
