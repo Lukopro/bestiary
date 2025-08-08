@@ -3,7 +3,6 @@ package net.luko.bestia;
 import com.mojang.logging.LogUtils;
 import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.network.ModPackets;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -27,8 +26,6 @@ public class Bestia
         modEventBus.addListener(this::commonSetup);
 
         MinecraftForge.EVENT_BUS.register(this);
-
-        context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

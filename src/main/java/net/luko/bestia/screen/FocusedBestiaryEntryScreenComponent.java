@@ -2,9 +2,11 @@ package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.network.ClearPointsPacket;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.SpendPointPacket;
 import net.luko.bestia.util.RomanUtil;
@@ -53,6 +55,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buffs/default_hovered.png");
 
     protected Map<SpecialBuff<?>, Integer> orderedBuffs;
+
+    CustomButton clearPointsButton;
 
     public FocusedBestiaryEntryScreenComponent(int x, int y, int width, BestiaryScreen parentScreen, ResourceLocation mobId, BestiaryData data) {
         super(x, y, width, parentScreen);
@@ -105,6 +109,10 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                                 BUTTON_SCALE)
                 );
             }
+
+            this.clearPointsButton = new CustomButton(0, 0, 72, 14,
+                    Component.literal("Clear points"),
+                    btn -> ModPackets.CHANNEL.sendToServer(new ClearPointsPacket(mobId)));
         }
     }
 
@@ -170,6 +178,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int nextY = y + 4; // magic padding #1
 
         if(data.level() >= 10){
+            this.clearPointsButton.setX(x + 6);
+            this.clearPointsButton.setY(nextY + 6 - (int)this.scrollAmount);
             nextY = drawCenteredComponentWrapped(guiGraphics,
                     Component.literal(String.format("%d point%s to spend", this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
                     x, rightX, nextY,
@@ -209,19 +219,20 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         nextY += 4; // magic padding #5
 
-        int lastTenth = Mth.floor((float)this.data.level() / 10F) * 10;
-        int nextTenth = lastTenth + 10;
+        int levelsPerPoint = BestiaConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
+        int lastPointLevel = Mth.floor((float)this.data.level() / (float)levelsPerPoint) * levelsPerPoint;
+        int nextPointLevel = lastPointLevel + levelsPerPoint;
 
-        int lastTenthWidth = FONT.width(String.valueOf(lastTenth));
-        guiGraphics.drawString(FONT, String.valueOf(lastTenth),
+        int lastTenthWidth = FONT.width(String.valueOf(lastPointLevel));
+        guiGraphics.drawString(FONT, String.valueOf(lastPointLevel),
                 x, nextY, 0xFFFFFF);
 
-        int nextTenthWidth = FONT.width(String.valueOf(nextTenth));
-        guiGraphics.drawString(FONT, String.valueOf(nextTenth),
+        int nextTenthWidth = FONT.width(String.valueOf(nextPointLevel));
+        guiGraphics.drawString(FONT, String.valueOf(nextPointLevel),
                 rightX - nextTenthWidth, nextY, 0xFFFFFF);
 
-        float splitFactor = ((float)this.data.kills() - (float)BestiaryData.totalNeededForLevel(lastTenth))
-                / ((float)BestiaryData.totalNeededForLevel(nextTenth) - (float)BestiaryData.totalNeededForLevel(lastTenth));
+        float splitFactor = ((float)this.data.kills() - (float)BestiaryData.totalNeededForLevel(lastPointLevel))
+                / ((float)BestiaryData.totalNeededForLevel(nextPointLevel) - (float)BestiaryData.totalNeededForLevel(lastPointLevel));
         int prevY = nextY;
         nextY = drawLevelBar(guiGraphics, x + lastTenthWidth + 2, rightX - nextTenthWidth - 2, nextY, splitFactor);
 
@@ -230,14 +241,19 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                 prevY, nextY,
                 List.of(Component.literal(String.format("%.1f%% (%d/%d kills)",
                         splitFactor * 100F,
-                        this.data.kills() - BestiaryData.totalNeededForLevel(lastTenth),
-                        BestiaryData.totalNeededForLevel(nextTenth) - BestiaryData.totalNeededForLevel(lastTenth))))));
+                        this.data.kills() - BestiaryData.totalNeededForLevel(lastPointLevel),
+                        BestiaryData.totalNeededForLevel(nextPointLevel) - BestiaryData.totalNeededForLevel(lastPointLevel))))));
 
         return nextY;
     }
 
     @Override
     public void renderContentButtons(GuiGraphics guiGraphics, int mouseX, int mouseY){
+        if(this.clearPointsButton != null){
+            this.clearPointsButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
+            this.clearPointsButton.setActive(this.data.remainingPoints() != this.data.totalPoints());
+            this.clearPointsButton.render(guiGraphics, mouseX, mouseY, 0F);
+        }
         for(var entry : this.specialBuffButtons.entrySet()){
             Component tooltip = null;
             CustomButton button = entry.getValue();
@@ -432,6 +448,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
     @Override
     public boolean handleContentClick(double mouseX, double mouseY, int button){
+        if(this.clearPointsButton != null && this.clearPointsButton.mouseClicked(mouseX, mouseY, button)) return true;
         for(CustomButton btn : this.specialBuffButtons.values()){
             if(btn.mouseClicked(mouseX, mouseY, button)) return true;
         }

@@ -1,11 +1,9 @@
 package net.luko.bestia.client;
 
-import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.screen.BestiaryScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.Collections;
 import java.util.HashMap;

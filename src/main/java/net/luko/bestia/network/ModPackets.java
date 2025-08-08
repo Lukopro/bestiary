@@ -27,5 +27,10 @@ public class ModPackets {
                 SpendPointPacket::encode,
                 SpendPointPacket::decode,
                 SpendPointPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, ClearPointsPacket.class,
+                ClearPointsPacket::encode,
+                ClearPointsPacket::decode,
+                ClearPointsPacket::handle);
     }
 }

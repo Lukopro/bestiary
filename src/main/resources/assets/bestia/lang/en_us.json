@@ -7,7 +7,7 @@
   "buff.special.bestia.execute": "Execute",
   "buff.special.bestia.lifesteal": "Lifesteal",
 
-  "buff.special.bestia.reroll.info": "Roll's this mob's loot table %s times.",
+  "buff.special.bestia.reroll.info": "Roll's this mob's loot table %s time(s).",
   "buff.special.bestia.execute.info": "Kills this mob if it's health is below %s%%.",
   "buff.special.bestia.lifesteal.info": "Heals player for %s%% of the damage dealt to this mob.",
 

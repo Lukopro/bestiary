@@ -1,12 +1,10 @@
 package net.luko.bestia.screen;
 
-import net.luko.bestia.Bestia;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.common.util.LogicalSidedProvider;
 
 import java.util.ArrayList;
 import java.util.List;

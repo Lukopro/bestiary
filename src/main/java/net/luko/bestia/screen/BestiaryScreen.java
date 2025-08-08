@@ -53,7 +53,7 @@ public class BestiaryScreen extends Screen {
 
     private int leftPosMoveTo;
 
-    private List<BestiaryEntryScreenComponent> bestiaryEntryScreenComponents = new ArrayList<>();
+    private final List<BestiaryEntryScreenComponent> bestiaryEntryScreenComponents = new ArrayList<>();
     private List<BestiaryEntryScreenComponent> filteredEntries;
 
     private EditBox searchBox;

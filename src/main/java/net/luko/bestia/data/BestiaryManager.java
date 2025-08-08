@@ -2,7 +2,6 @@ package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaConfig;
-import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ModPackets;
@@ -12,9 +11,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraftforge.network.PacketDistributor;
-import oshi.util.tuples.Pair;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,7 +20,7 @@ import java.util.Map;
 public class BestiaryManager {
     private final Map<ResourceLocation, Integer> killCounts = new HashMap<>();
     private final Map<ResourceLocation, BestiaryData> cachedData = new HashMap<>();
-    private final Map<ResourceLocation, Map<ResourceLocation, Integer>> specialBuffPoints = new HashMap<>();
+    private final Map<ResourceLocation, Map<ResourceLocation, Integer>> spentPoints = new HashMap<>();
 
     public void loadFromNBT(CompoundTag bestiaryTag){
         if(bestiaryTag.contains("Entries")){
@@ -43,10 +40,12 @@ public class BestiaryManager {
                 continue;
             }
             int kills = tag.getInt("kills");
-            Map<ResourceLocation, Integer> spentPoints = loadSpecialBuffs(tag.getCompound("spent_points"));
-            killCounts.put(mobId, kills);
-            specialBuffPoints.put(mobId, spentPoints);
-            cachedData.put(mobId, computeBestiaryData(kills, spentPoints));
+            Map<ResourceLocation, Integer> loadedSpentPoints = loadSpecialBuffs(tag.getCompound("spent_points"));
+            this.killCounts.put(mobId, kills);
+            BestiaryData newData = BestiaryData.compute(kills, loadedSpentPoints);
+            this.cachedData.put(mobId, newData);
+            this.spentPoints.put(mobId, newData.spentPoints());
+
         }
     }
 
@@ -81,47 +80,35 @@ public class BestiaryManager {
         return newTag;
     }
 
-    public void onKillNoSync(ResourceLocation mobId){
-        int newKills = killCounts.getOrDefault(mobId, 0) + 1;
-        killCounts.put(mobId, newKills);
-        cachedData.put(mobId, computeBestiaryData(
-                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
-    }
-
     public void onKillWithSync(ServerPlayer player, ResourceLocation mobId){
-        int newKills = killCounts.getOrDefault(mobId, 0) + 1;
-        killCounts.put(mobId, newKills);
-        cachedData.put(mobId, computeBestiaryData(
-                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
-        syncToPlayer(player);
+        addKillsAndSync(player, mobId, 1);
     }
 
     public void setLevelAndSync(ServerPlayer player, ResourceLocation mobId, int level){
         int newKills = BestiaryData.totalNeededForLevel(level);
-        killCounts.put(mobId, newKills);
-        cachedData.put(mobId, computeBestiaryData(
-                newKills, specialBuffPoints.getOrDefault(mobId, new HashMap<>())));
+        this.setKillsAndSync(player, mobId, newKills);
+    }
+
+    public void addLevelsAndSync(ServerPlayer player, ResourceLocation mobId, int levels){
+        int newKills = BestiaryData.totalNeededForLevel(cachedData.get(mobId).level() + levels);
+        this.setKillsAndSync(player, mobId, newKills);
+    }
+
+    public void setKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
+        this.killCounts.put(mobId, kills);
+        BestiaryData newData = BestiaryData.compute(kills, this.spentPoints.getOrDefault(mobId, new HashMap<>()));
+        this.cachedData.put(mobId, newData);
+        this.spentPoints.put(mobId, newData.spentPoints());
         syncToPlayer(player);
     }
 
-    public void onSpendPointNoSync(ResourceLocation mobId, ResourceLocation specialBuff){
-        int newPoints = specialBuffPoints
-                .computeIfAbsent(mobId, id -> new HashMap<>())
-                .getOrDefault(specialBuff, 0) + 1;
-        if(getSpecialBuffLevel(SpecialBuffRegistry.get(specialBuff), mobId) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()){
-            Bestia.LOGGER.warn("Client attempted to spend buff point, but buff is maxed.");
-            return;
-        }
-        if(cachedData.get(mobId).remainingPoints() <= 0){
-            Bestia.LOGGER.warn("Client attempted to spend buff point, but no points are available.");
-            return;
-        }
-        specialBuffPoints.get(mobId).put(specialBuff, newPoints);
-        cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
+    public void addKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
+        int newKills = this.killCounts.getOrDefault(mobId, 0) + kills;
+        this.setKillsAndSync(player, mobId, newKills);
     }
 
     public void onSpendPointWithSync(ServerPlayer player, ResourceLocation mobId, ResourceLocation specialBuff){
-        int newPoints = specialBuffPoints
+        int newPoints = this.spentPoints
                 .computeIfAbsent(mobId, id -> new HashMap<>())
                 .getOrDefault(specialBuff, 0) + 1;
         if(getSpecialBuffLevel(SpecialBuffRegistry.get(specialBuff), mobId) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()){
@@ -132,27 +119,34 @@ public class BestiaryManager {
             Bestia.LOGGER.warn("Client attempted to spend buff point, but no points are available.");
             return;
         }
-        specialBuffPoints.get(mobId).put(specialBuff, newPoints);
-        cachedData.put(mobId, computeBestiaryData(killCounts.get(mobId), specialBuffPoints.get(mobId)));
+        this.spentPoints.get(mobId).put(specialBuff, newPoints);
+        this.cachedData.put(mobId, BestiaryData.compute(this.killCounts.get(mobId), this.spentPoints.get(mobId)));
+        syncToPlayer(player);
+    }
+
+    public void onClearPointsWithSync(ServerPlayer player, ResourceLocation mobId){
+        var points = this.spentPoints.get(mobId);
+        if(points != null) points.clear();
+        if(this.cachedData.containsKey(mobId)) this.cachedData.put(mobId, BestiaryData.compute(this.killCounts.get(mobId), this.spentPoints.get(mobId)));
         syncToPlayer(player);
     }
 
     public int getKillCount(ResourceLocation mobId){
-        return killCounts.getOrDefault(mobId, 0);
+        return this.killCounts.getOrDefault(mobId, 0);
     }
 
     public BestiaryData getData(ResourceLocation mobId){
-        return cachedData.getOrDefault(mobId, computeBestiaryData(0, new HashMap<>()));
+        return this.cachedData.getOrDefault(mobId, BestiaryData.compute(0, new HashMap<>()));
     }
 
     public Map<ResourceLocation, BestiaryData> getAllData(){
-        return Collections.unmodifiableMap(cachedData);
+        return Collections.unmodifiableMap(this.cachedData);
     }
 
     public CompoundTag serializeNBT(){
         CompoundTag tag = new CompoundTag();
         ListTag entries = new ListTag();
-        for(var entry : cachedData.entrySet()){
+        for(var entry : this.cachedData.entrySet()){
             CompoundTag entryTag = new CompoundTag();
 
             entryTag.putString("id", entry.getKey().toString());
@@ -171,37 +165,6 @@ public class BestiaryManager {
         return tag;
     }
 
-    private BestiaryData computeBestiaryData(int kills, Map<ResourceLocation, Integer> spentPoints){
-        Pair<Integer, Integer> levelAndRemaining = computeLevelAndRemaining(kills);
-        int level = levelAndRemaining.getA();
-        int remaining = levelAndRemaining.getB();
-        MobBuff mobBuff = computeMobBuff(level);
-
-        int totalPoints = level / 10;
-        int remainingPoints = totalPoints;
-        for(var points : spentPoints.values()){
-            remainingPoints -= points;
-        }
-
-        return new BestiaryData(kills, level, remaining, mobBuff, totalPoints, remainingPoints, spentPoints);
-    }
-
-    private Pair<Integer, Integer> computeLevelAndRemaining(int kills){
-        int level = Mth.floor((-1 + Math.sqrt(1 + 4 * kills)) / 2.0);
-        int remaining = (level + 1) * (level + 2) - kills;
-        return new Pair<>(level, remaining);
-    }
-
-    public static int neededForLevel(int level){
-        return 2 * level;
-    }
-
-    private MobBuff computeMobBuff(int level){
-        float damageFactor = 1.0F + 0.05F * (float)level;
-        float resistanceFactor = (float)Math.pow(0.95F, level);
-        return new MobBuff(damageFactor, resistanceFactor);
-    }
-
     public void syncToPlayer(ServerPlayer player){
         ModPackets.CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> player),
@@ -211,7 +174,7 @@ public class BestiaryManager {
 
     public int getSpecialBuffLevel(SpecialBuff<?> buff, ResourceLocation mobId){
         return BestiaConfig.ENABLE_SPECIAL_BUFFS.get()
-                ? specialBuffPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
+                ? this.spentPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
                 : 0;
     }
 

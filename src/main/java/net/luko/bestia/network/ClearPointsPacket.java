@@ -1,5 +1,6 @@
 package net.luko.bestia.network;
 
+import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
 import net.minecraft.network.FriendlyByteBuf;
@@ -9,33 +10,32 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class SpendPointPacket {
+public class ClearPointsPacket {
     private final ResourceLocation mobId;
-    private final ResourceLocation buffId;
 
-    public SpendPointPacket(ResourceLocation mobId, ResourceLocation buffId){
+    public ClearPointsPacket(ResourceLocation mobId){
         this.mobId = mobId;
-        this.buffId = buffId;
     }
 
-    public static void encode(SpendPointPacket packet, FriendlyByteBuf buf){
+    public static void encode(ClearPointsPacket packet, FriendlyByteBuf buf){
         buf.writeResourceLocation(packet.mobId);
-        buf.writeResourceLocation(packet.buffId);
     }
 
-    public static SpendPointPacket decode(FriendlyByteBuf buf){
+    public static ClearPointsPacket decode(FriendlyByteBuf buf){
         ResourceLocation mobId = buf.readResourceLocation();
-        ResourceLocation buffId = buf.readResourceLocation();
-        return new SpendPointPacket(mobId, buffId);
+        return new ClearPointsPacket(mobId);
     }
 
-    public static void handle(SpendPointPacket packet, Supplier<NetworkEvent.Context> contextSupplier){
+    public static void handle(ClearPointsPacket packet, Supplier<NetworkEvent.Context> contextSupplier){
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
+            Bestia.LOGGER.info("Handling");
             ServerPlayer player = context.getSender();
             if(player != null){
                 BestiaryManager manager = PlayerBestiaryStore.get(player);
-                manager.onSpendPointWithSync(player, packet.mobId, packet.buffId);
+                Bestia.LOGGER.info("Clearing");
+                manager.onClearPointsWithSync(player, packet.mobId);
+                Bestia.LOGGER.info("Gucci");
             }
         });
         context.setPacketHandled(true);
