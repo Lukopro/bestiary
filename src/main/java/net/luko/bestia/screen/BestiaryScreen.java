@@ -1,6 +1,7 @@
 package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaConfig;
 import net.luko.bestia.data.BestiaryData;
@@ -13,10 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static net.luko.bestia.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
 
@@ -31,8 +29,8 @@ public class BestiaryScreen extends Screen {
     private static final int PANEL_BLIT_HEIGHT = 384;
 
     private static final int PADDING = 8;
-    private static final int LEFT_BLIT_MARGIN =
-            (PANEL_BLIT_WIDTH - BestiaryEntryScreenComponent.ENTRY_WIDTH) / 2;
+    private static final int HORIZONTAL_ENTRY_BLIT_MARGIN = 58;
+    private static final int HORIZONTAL_ENTRY_BLIT_PADDING = 4;
 
     private static final float SCALE = (float)PANEL_BLIT_HEIGHT / (float)PANEL_TEXTURE_HEIGHT;
 
@@ -60,6 +58,9 @@ public class BestiaryScreen extends Screen {
 
     private BestiarySideScreenComponent activeSideScreenComponent = null;
     private CustomButton infoToggleButton;
+    private CustomButton zoomInButton;
+    private CustomButton zoomOutButton;
+
     private static boolean shownBefore = false;
 
     public static final int MARGIN = 4;
@@ -71,6 +72,9 @@ public class BestiaryScreen extends Screen {
 
     private boolean onlySideScreen = false;
     private int sideScreenWidth = 0;
+    private static final int MAX_ZOOM = 1;
+    private static final int MIN_ZOOM = 3;
+    private int zoom = MAX_ZOOM;
 
     public BestiaryScreen(Map<ResourceLocation, BestiaryData> entries) {
         super(Component.literal("Bestiary"));
@@ -78,7 +82,23 @@ public class BestiaryScreen extends Screen {
             this.bestiaryEntryScreenComponents.add(
                     new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
         }
-        this.filteredEntries = List.copyOf(this.bestiaryEntryScreenComponents);
+        this.filterEntries("");
+    }
+
+    protected int getInfoToggleButtonX(){
+        return this.leftPos + 36;
+    }
+
+    protected int getSearchBoxX(){
+        return this.leftPos + (PANEL_BLIT_WIDTH / 2) - 104;
+    }
+
+    protected int getZoomInButtonX(){
+        return this.leftPos + PANEL_BLIT_WIDTH - 86;
+    }
+
+    protected int getZoomOutButtonX(){
+        return this.leftPos + PANEL_BLIT_WIDTH - 60;
     }
 
     @Override
@@ -93,20 +113,20 @@ public class BestiaryScreen extends Screen {
 
         this.searchBox = new EditBox(
                 this.font,
-                this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90,
+                this.getSearchBoxX(),
                 this.topPos + 13,
                 180, 21,
                 Component.literal("Search")
         );
 
         this.searchBox.setMaxLength(50);
-        this.searchBox.setResponder(this::onSearchChanged);
+        this.searchBox.setResponder(this::filterEntries);
         this.searchBox.setBordered(true);
         this.searchBox.setVisible(true);
         this.addRenderableWidget(this.searchBox);
 
         this.infoToggleButton = new CustomButton(
-                this.leftPos + PANEL_BLIT_WIDTH - 72, this.topPos + 13, 21, 21,
+                this.getInfoToggleButtonX(), this.topPos + 13, 21, 21,
                 Component.literal("i"),
                 btn -> {
                     if(this.activeSideScreenComponent instanceof BestiaryInfoScreenComponent) this.clearSideScreenComponent();
@@ -114,7 +134,20 @@ public class BestiaryScreen extends Screen {
                     shownBefore = true;
                 });
 
-        this.addRenderableWidget(infoToggleButton);
+        this.zoomInButton = new CustomButton(
+                this.getZoomInButtonX(), this.topPos + 13, 21, 21,
+                Component.literal("+"),
+                btn -> this.tryZoomIn()
+        );
+        this.zoomOutButton = new CustomButton(
+                this.getZoomOutButtonX(), this.topPos + 13, 21, 21,
+                Component.literal("-"),
+                btn -> this.tryZoomOut()
+        );
+
+        this.addRenderableWidget(this.infoToggleButton);
+        this.addRenderableWidget(this.zoomInButton);
+        this.addRenderableWidget(this.zoomOutButton);
 
         if(!shownBefore) openInfoScreenComponent();
         else clearSideScreenComponent();
@@ -218,23 +251,31 @@ public class BestiaryScreen extends Screen {
         if(onlySideScreen) {
             this.searchBox.visible = false;
             this.infoToggleButton.visible = false;
+            this.zoomInButton.visible = false;
+            this.zoomOutButton.visible = false;
         } else {
             this.searchBox.visible = true;
             this.infoToggleButton.visible = true;
-            this.searchBox.setX(this.leftPos + (PANEL_BLIT_WIDTH / 2) - 90);
-            this.infoToggleButton.setX(this.leftPos + PANEL_BLIT_WIDTH - 72);
+            this.zoomInButton.visible = true;
+            this.zoomOutButton.visible = true;
+
+            this.searchBox.setX(this.getSearchBoxX());
+            this.infoToggleButton.setX(this.getInfoToggleButtonX());
+            this.zoomInButton.setX(this.getZoomInButtonX());
+            this.zoomOutButton.setX(this.getZoomOutButtonX());
         }
     }
 
     private void updateSearch(){
-        this.onSearchChanged(this.searchBox.getValue());
+        this.filterEntries(this.searchBox.getValue());
     }
 
-    private void onSearchChanged(String newText){
+    private void filterEntries(String newText){
         String query = newText.trim().toLowerCase();
 
         this.filteredEntries = this.bestiaryEntryScreenComponents.stream()
                 .filter(entry -> entry.getDisplayName().toLowerCase().contains(query))
+                .sorted(Comparator.comparingInt(BestiaryEntryScreenComponent::kills).reversed())
                 .toList();
     }
 
@@ -315,10 +356,14 @@ public class BestiaryScreen extends Screen {
     }
 
     private void renderEntries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.scale(1F / (float) this.zoom, 1F / (float) this.zoom, 1F);
+
         int scissorX = this.leftPos;
-        int scissorY = this.topPos + PANEL_TOP_BLIT_HEIGHT - 6;
+        int scissorY = (this.topPos + PANEL_TOP_BLIT_HEIGHT - 6);
         int scissorWidth = PANEL_BLIT_WIDTH;
-        int scissorHeight = getPanelContentHeight() - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT + 12;
+        int scissorHeight = (getPanelContentHeight() - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT + 12);
         int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
         int windowHeight = Minecraft.getInstance().getWindow().getHeight();
 
@@ -326,25 +371,44 @@ public class BestiaryScreen extends Screen {
                 scissorX * scaleFactor,
                 (windowHeight - (scissorY + scissorHeight) * scaleFactor),
                 scissorWidth * scaleFactor,
-                scissorHeight * scaleFactor
+                (scissorHeight * scaleFactor)
         );
 
+        int minX = this.leftPos + HORIZONTAL_ENTRY_BLIT_MARGIN + (HORIZONTAL_ENTRY_BLIT_PADDING / this.zoom);
+        minX *= this.zoom;
+
+        int[] xCoords = new int[this.zoom];
+        int columnOffset = BestiaryEntryScreenComponent.ENTRY_WIDTH + 6;
+        for(int i = 0; i < xCoords.length; i++){
+            xCoords[i] = minX + i * columnOffset;
+        }
+
+        int column = 0;
         int yOffset = this.topPos + PANEL_TOP_BLIT_HEIGHT + PADDING - (int)scrollAmount;
+        yOffset *= this.zoom;
+
+        int y = yOffset;
+
         for(var entry : filteredEntries){
-            if(yOffset > -ENTRY_HEIGHT && yOffset < this.height){
-                int x = this.leftPos + LEFT_BLIT_MARGIN;
-                int y = yOffset;
-                entry.render(guiGraphics, x, y);
-                if(mouseInScissor(mouseX, mouseY)) entry.checkMouse(x, y, mouseX, mouseY);
+            if(y > -ENTRY_HEIGHT && y < this.height * this.zoom){
+                entry.render(guiGraphics, xCoords[column], y, true);
+                if(mouseInScissor(mouseX, mouseY)) entry.checkMouse(xCoords[column], y, mouseX * this.zoom, mouseY * this.zoom);
             }
-            yOffset += ENTRY_HEIGHT + PADDING;
+
+            column++;
+            if(column == this.zoom){
+                column = 0;
+                y += ENTRY_HEIGHT + PADDING;
+            }
         }
 
         RenderSystem.disableScissor();
+
+        poseStack.popPose();
     }
 
     private boolean mouseInScissor(int mouseX, int mouseY){
-        return mouseX >= leftPos + LEFT_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - LEFT_BLIT_MARGIN
+        return mouseX >= leftPos + HORIZONTAL_ENTRY_BLIT_MARGIN && mouseX <= leftPos + PANEL_BLIT_WIDTH - HORIZONTAL_ENTRY_BLIT_MARGIN
                 && mouseY >= topPos + PANEL_TOP_BLIT_HEIGHT && mouseY <= topPos - PANEL_TOP_BLIT_HEIGHT + getPanelContentHeight();
     }
 
@@ -353,7 +417,7 @@ public class BestiaryScreen extends Screen {
         if(!this.onlySideScreen && mouseInScissor(mouseX, mouseY)){
             for(var component : bestiaryEntryScreenComponents){
                 for(var tooltip : component.getTooltips()){
-                    if(tooltip.contains(mouseX, mouseY)){
+                    if(tooltip.contains(mouseX * this.zoom, mouseY * this.zoom)){
                         tooltipToRender = tooltip.tooltip();
                         break;
                     }
@@ -377,13 +441,23 @@ public class BestiaryScreen extends Screen {
         return this.height - this.topPos * 2;
     }
 
+    public void tryZoomOut(){
+        this.zoom = Mth.clamp(++this.zoom, MAX_ZOOM, MIN_ZOOM);
+        this.scrollAmount = 0F;
+    }
+
+    public void tryZoomIn(){
+        this.zoom = Mth.clamp(--this.zoom, MAX_ZOOM, MIN_ZOOM);
+        this.scrollAmount = 0F;
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta){
         if(!onlySideScreen && mouseInScissor((int)mouseX, (int)mouseY)) {
             this.scrollAmount -= (float) delta * 30F;
 
             int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
-            float maxScroll = Math.max(0, totalContentHeight - visibleHeight);
+            float maxScroll = Math.max(0, (totalContentHeight / this.zoom / this.zoom) - visibleHeight);
 
             this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
             return true;

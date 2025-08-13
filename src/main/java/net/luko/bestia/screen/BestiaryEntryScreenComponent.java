@@ -96,20 +96,20 @@ public class BestiaryEntryScreenComponent {
         this.mouseIsHovering = false;
     }
 
-    public void render(GuiGraphics guiGraphics, int x, int y){
+    public void render(GuiGraphics guiGraphics, int x, int y, boolean withNotificationBadge){
         this.tooltips.clear();
 
-        drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
+        int rightTitleX = this.drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
 
-        drawKills(guiGraphics, x + ENTRY_WIDTH - 2, y, String.format("%d kill%s", this.data.kills(), this.data.kills() == 1 ? "" : "s"));
+        this.drawKills(guiGraphics, x + ENTRY_WIDTH - 2, y, String.format("%d kill%s", this.data.kills(), this.data.kills() == 1 ? "" : "s"));
 
-        drawComponent(guiGraphics, x, y + TITLE_TEXTURE_HEIGHT);
+        this.drawComponent(guiGraphics, x, y + TITLE_TEXTURE_HEIGHT);
 
-        drawLevelBar(guiGraphics, x + ENTRY_WIDTH / 2, y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT);
+        this.drawLevelBar(guiGraphics, x + ENTRY_WIDTH / 2, y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT);
 
-        drawLevelText(guiGraphics, x, y);
+        this.drawLevelText(guiGraphics, x, y);
 
-        if(entityType != null) drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
+        if(entityType != null) this.drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
 
         guiGraphics.drawString(FONT,
                 String.format("x%.2f damage dealt",
@@ -119,6 +119,8 @@ public class BestiaryEntryScreenComponent {
                 String.format("x%.3f damage taken",
                         data.mobBuff().resistanceFactor()),
                         x + 52, y + 40, 0xAAAAAA);
+
+        if(withNotificationBadge) this.drawNotificationBadge(guiGraphics, rightTitleX - 4, y - 4);
 
         this.tooltips.add(new BestiaryTooltip(
                 x, x + ENTRY_WIDTH,
@@ -143,7 +145,7 @@ public class BestiaryEntryScreenComponent {
         return TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + FONT.width(name) + TITLE_TEXTURE_RIGHT_WIDTH;
     }
 
-    private void drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {
+    private int drawTitle(GuiGraphics guiGraphics, int x, int y, String name) {
         int textWidth = FONT.width(name);
         ResourceLocation backgroundTexture = mouseIsHovering ? TITLE_TEXTURE_LIGHT : TITLE_TEXTURE_DARK;
 
@@ -169,6 +171,8 @@ public class BestiaryEntryScreenComponent {
 
         guiGraphics.drawString(FONT, name,
                 x + TITLE_TEXTURE_LEFT_WIDTH + xPadding, y + 3, 0xFFFFFF);
+
+        return middleXEnd + TITLE_TEXTURE_RIGHT_WIDTH;
     }
 
     private void drawKills(GuiGraphics guiGraphics, int maxX, int y, String kills){
@@ -241,6 +245,30 @@ public class BestiaryEntryScreenComponent {
         guiGraphics.pose().popPose();
     }
 
+    private void drawNotificationBadge(GuiGraphics guiGraphics, int x, int y){
+        int unspentPoints = this.data.remainingPoints();
+        if(unspentPoints > 0){
+            final ResourceLocation WIDGETS = ResourceLocation.fromNamespaceAndPath("bestia", "textures/gui/bestiary/badges.png");
+            int widgetX = switch (unspentPoints) {
+                case 1 -> 0;
+                case 2 -> 11;
+                case 3 -> 22;
+                case 4 -> 33;
+                case 5 -> 44;
+                default -> 55;
+            };
+            int widgetY = 22;
+            int widgetWidth = 11;
+            int widgetHeight = 11;
+
+            guiGraphics.blit(WIDGETS, x, y,
+                    widgetWidth, widgetHeight,
+                    widgetX, widgetY,
+                    widgetWidth, widgetHeight,
+                    66, 11);
+        }
+    }
+
     private void drawMobIcon(GuiGraphics guiGraphics, int x, int y, EntityType<?> type){
         Minecraft mc = Minecraft.getInstance();
         if(mc.level == null) return;
@@ -303,6 +331,10 @@ public class BestiaryEntryScreenComponent {
         float factor = 20F;
 
         return -Math.round(factor * flatness * sinPitch);
+    }
+
+    public int kills(){
+        return this.data.kills();
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button){

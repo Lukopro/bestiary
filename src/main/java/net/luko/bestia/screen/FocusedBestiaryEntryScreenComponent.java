@@ -161,7 +161,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         float headerScale = (float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH;
         poseStack.pushPose();
         poseStack.scale(headerScale, headerScale, 1.0F);
-        this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale));
+        this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale), false);
         poseStack.popPose();
 
         for(BestiaryTooltip tooltip : this.entry.getTooltips()){
@@ -183,7 +183,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             nextY = drawCenteredComponentWrapped(guiGraphics,
                     Component.literal(String.format("%d point%s to spend", this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
                     x, rightX, nextY,
-                    0xAAAAAA);
+                    this.data.remainingPoints() == 0 ? 0xAAAAAA : 0xFFAAAA);
             nextY += 4; // magic padding #2
 
             for(var entry : orderedBuffs.entrySet()){
