@@ -1,6 +1,5 @@
 -~ THIS IS FOR PERSONAL USE, DO NOT EXPECT THESE CHANGES ~-
 
-- Bestiary GUI (buff icons)
 - BUFFS: damage (specialized? flame, ice), resistance, fire immunity, loot boost, movement slower, boost player movement, thorns,
 - Loot info for mobs
 - More scrolling (drag mouse, middle mouse click, sidebar)

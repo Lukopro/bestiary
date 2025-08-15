@@ -237,16 +237,17 @@ public class BestiaryEntryScreenComponent {
 
     private void drawLevelText(GuiGraphics guiGraphics, int x, int y) {
         String levelText = String.format("%d", data.level());
-        float levelScale = Math.min(2.5F, 7F / (float)Math.floor(Math.log10(data.kills())));
+        int levelWidth = FONT.width(levelText);
+        float levelScale = Math.min(2.5F, 34F / levelWidth);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().scale(levelScale, levelScale, 1.0F);
 
-        int levelWidth = FONT.width(levelText);
+
         float centerX = x + ENTRY_WIDTH - 23F;
         float levelTextX = centerX / levelScale - (float)levelWidth / 2F;
 
-        float levelTextY = (y + 24.5F) / levelScale + 7F / (levelScale * levelScale);
+        float levelTextY = (y + 20F) / levelScale + 12F / (float)(Math.pow(levelScale, 1.5));
 
 
         guiGraphics.drawString(FONT, levelText,
