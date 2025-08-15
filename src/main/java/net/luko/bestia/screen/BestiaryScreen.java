@@ -3,7 +3,8 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
-import net.luko.bestia.config.BestiaConfig;
+import net.luko.bestia.config.BestiaClientConfig;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -61,7 +62,7 @@ public class BestiaryScreen extends Screen {
     private CustomButton zoomInButton;
     private CustomButton zoomOutButton;
 
-    private static boolean shownBefore = false;
+    private static boolean shownBefore;
 
     public static final int MARGIN = 4;
 
@@ -78,6 +79,7 @@ public class BestiaryScreen extends Screen {
 
     public BestiaryScreen(Map<ResourceLocation, BestiaryData> entries) {
         super(Component.literal("Bestiary"));
+        shownBefore = BestiaClientConfig.SHOWN_BEFORE.get();
         for(var entry : entries.entrySet()){
             this.bestiaryEntryScreenComponents.add(
                     new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
@@ -132,6 +134,7 @@ public class BestiaryScreen extends Screen {
                     if(this.activeSideScreenComponent instanceof BestiaryInfoScreenComponent) this.clearSideScreenComponent();
                     else this.openInfoScreenComponent();
                     shownBefore = true;
+                    BestiaClientConfig.SHOWN_BEFORE.set(true);
                 });
 
         this.zoomInButton = new CustomButton(
@@ -185,7 +188,7 @@ public class BestiaryScreen extends Screen {
     }
 
     public void openFocusedEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
-        if(!BestiaConfig.ENABLE_SPECIAL_BUFFS.get()) return;
+        if(!BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()) return;
         this.clearSideScreenComponent();
         int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
         this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);
@@ -214,6 +217,7 @@ public class BestiaryScreen extends Screen {
         this.sideScreenWidth = 0;
         this.updateLeftPosMoveTo();
         shownBefore = true;
+        BestiaClientConfig.SHOWN_BEFORE.set(true);
     }
 
     public BestiarySideScreenComponent getActiveSideScreenComponent(){

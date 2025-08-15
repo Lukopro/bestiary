@@ -1,7 +1,7 @@
 package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
-import net.luko.bestia.config.BestiaConfig;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ModPackets;
@@ -173,7 +173,7 @@ public class BestiaryManager {
     }
 
     public int getSpecialBuffLevel(SpecialBuff<?> buff, ResourceLocation mobId){
-        return BestiaConfig.ENABLE_SPECIAL_BUFFS.get()
+        return BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()
                 ? this.spentPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
                 : 0;
     }

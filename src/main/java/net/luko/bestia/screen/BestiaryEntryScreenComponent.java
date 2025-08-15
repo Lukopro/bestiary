@@ -2,6 +2,7 @@ package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -125,7 +126,9 @@ public class BestiaryEntryScreenComponent {
         this.tooltips.add(new BestiaryTooltip(
                 x, x + ENTRY_WIDTH,
                 y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT, y + ENTRY_HEIGHT,
-                List.of(Component.literal(String.format(
+                List.of(Component.literal(this.data.level() >= BestiaCommonConfig.MAX_LEVEL.get()
+                        ? "MAX LEVEL!"
+                        : String.format(
                         "%.1f%% (%d/%d kills)",
                         (1F - ((float)this.data.remainingKills() / (float)this.data.neededForNextLevel())) * 100F,
                         this.data.neededForNextLevel() - this.data.remainingKills(),
@@ -217,7 +220,10 @@ public class BestiaryEntryScreenComponent {
         ResourceLocation backgroundTexture = this.mouseIsHovering ? LEVEL_BACKGROUND_LIGHT : LEVEL_BACKGROUND_DARK;
 
         int x = middleX - LEVEL_BAR_WIDTH / 2;
-        int split = Math.round((float)ENTRY_WIDTH * (float)(data.neededForNextLevel() - data.remainingKills()) / (float)data.neededForNextLevel());
+        int needed = data.neededForNextLevel();
+        int split = needed == 0
+        ? ENTRY_WIDTH
+        : Math.round((float)ENTRY_WIDTH * (float)(needed - data.remainingKills()) / (float)needed);
 
         guiGraphics.blit(completedTexture, x, y,
                 0, 0,
@@ -230,13 +236,17 @@ public class BestiaryEntryScreenComponent {
     }
 
     private void drawLevelText(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().scale(2.5F, 2.5F, 1.0F);
-
         String levelText = String.format("%d", data.level());
+        float levelScale = Math.min(2.5F, 7F / (float)Math.floor(Math.log10(data.kills())));
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().scale(levelScale, levelScale, 1.0F);
+
         int levelWidth = FONT.width(levelText);
-        float levelTextX = ((float)x + (float)ENTRY_WIDTH - 23F) / 2.5F - (float)levelWidth / 2F;
-        float levelTextY = ((float)y + 27F) / 2.5F;
+        float centerX = x + ENTRY_WIDTH - 23F;
+        float levelTextX = centerX / levelScale - (float)levelWidth / 2F;
+
+        float levelTextY = (y + 24.5F) / levelScale + 7F / (levelScale * levelScale);
 
 
         guiGraphics.drawString(FONT, levelText,

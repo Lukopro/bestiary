@@ -2,7 +2,7 @@ package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
-import net.luko.bestia.config.BestiaConfig;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
@@ -131,6 +131,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             if(buff != null) existingBuffs.put(buff, entry.getValue());
         }
         Map<SpecialBuff<?>, Integer> allOrderedBuffs = new LinkedHashMap<>(existingBuffs.entrySet().stream()
+                .filter(entry -> entry.getKey().getMaxLevel() > 0)
                 .sorted((a, b) -> b.getValue() - a.getValue())
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -139,7 +140,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
                         LinkedHashMap::new
                 )));
         for(SpecialBuff<?> registered : SpecialBuffRegistry.all()){
-            if(!allOrderedBuffs.containsKey(registered)) allOrderedBuffs.put(registered, 0);
+            if(!allOrderedBuffs.containsKey(registered) && registered.getMaxLevel() > 0) allOrderedBuffs.put(registered, 0);
         }
         this.orderedBuffs = allOrderedBuffs;
     }
@@ -177,7 +178,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int rightX = x + availableWidth;
         int nextY = y + 4; // magic padding #1
 
-        if(data.level() >= 10){
+        if(data.level() >= BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get()){
             this.clearPointsButton.setX(x + 6);
             this.clearPointsButton.setY(nextY + 6 - (int)this.scrollAmount);
             nextY = drawCenteredComponentWrapped(guiGraphics,
@@ -219,7 +220,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         nextY += 4; // magic padding #5
 
-        int levelsPerPoint = BestiaConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
+        int levelsPerPoint = BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
         int lastPointLevel = Mth.floor((float)this.data.level() / (float)levelsPerPoint) * levelsPerPoint;
         int nextPointLevel = lastPointLevel + levelsPerPoint;
 
@@ -239,7 +240,9 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         this.tooltips.add(new BestiaryTooltip(
                 x + lastTenthWidth + 2, rightX - nextTenthWidth - 2,
                 prevY, nextY,
-                List.of(Component.literal(String.format("%.1f%% (%d/%d kills)",
+                List.of(Component.literal(this.data.level() >= BestiaCommonConfig.MAX_LEVEL.get()
+                        ? "MAX LEVEL!"
+                        : String.format("%.1f%% (%d/%d kills)",
                         splitFactor * 100F,
                         this.data.kills() - BestiaryData.totalNeededForLevel(lastPointLevel),
                         BestiaryData.totalNeededForLevel(nextPointLevel) - BestiaryData.totalNeededForLevel(lastPointLevel))))));

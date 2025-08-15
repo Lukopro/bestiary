@@ -1,6 +1,7 @@
 package net.luko.bestia.data.buff.special;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collection;
@@ -10,12 +11,25 @@ import java.util.Map;
 public class SpecialBuffRegistry {
     private static final Map<ResourceLocation, SpecialBuff<?>> BUFFS = new HashMap<>();
 
-    public static final SpecialBuff<Integer> REROLL =
-            register(new IntegerBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reroll"), 0, 1, 3));
-    public static final SpecialBuff<Float> EXECUTE =
-            register(new FloatBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute"), 0.0F, 0.1F, 3, true));
-    public static final SpecialBuff<Float> LIFESTEAL =
-            register(new FloatBuff(ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "lifesteal"), 0.0F, 0.05F, 5, true));
+    public static SpecialBuff<Integer> REROLL;
+    public static SpecialBuff<Float> EXECUTE;
+    public static SpecialBuff<Float> LIFESTEAL;
+
+    public static void init(){
+        int rerollMaxLevel = BestiaCommonConfig.REROLL_MAX_LEVEL.get();
+        int executeMaxLevel = BestiaCommonConfig.EXECUTE_MAX_LEVEL.get();
+        int lifestealMaxLevel = BestiaCommonConfig.LIFESTEAL_MAX_LEVEL.get();
+
+        REROLL = register(new IntegerBuff(
+                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reroll"),
+                0, 1, rerollMaxLevel));
+        EXECUTE = register(new FloatBuff(
+                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute"),
+                0.0F, BestiaCommonConfig.EXECUTE_BUFF_PER_LEVEL.get().floatValue(), executeMaxLevel, true));
+        LIFESTEAL = register(new FloatBuff(
+                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "lifesteal"),
+                0.0F, BestiaCommonConfig.LIFESTEAL_BUFF_PER_LEVEL.get().floatValue(), lifestealMaxLevel, true));
+    }
 
     public static <T> SpecialBuff<T> register(SpecialBuff<T> buff){
         BUFFS.put(buff.getId(), buff);
