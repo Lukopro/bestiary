@@ -23,6 +23,8 @@ public class BestiaCommonConfig {
     public static ForgeConfigSpec.ConfigValue<String> KILLS_FORMULA;
     public static ForgeConfigSpec.BooleanValue MONOTONY_CHECK;
 
+    public static ForgeConfigSpec.IntValue AUTOSAVE_INTERVAL;
+
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
 
@@ -88,6 +90,14 @@ public class BestiaCommonConfig {
                 .comment("Use this if you don't know if the killsFormula is strictly increasing.")
                 .comment("This is laggy! Don't leave this on. (default: false)")
                 .define("monotonyCheck", false);
+
+        builder.pop();
+
+        builder.push("Data");
+
+        AUTOSAVE_INTERVAL = builder
+                .comment("How many ticks until the server saves all bestiary data automatically? (default: 12000 = 10 minutes)")
+                        .defineInRange("autosaveInterval", 12000, 100, Integer.MAX_VALUE);
 
         builder.pop();
 

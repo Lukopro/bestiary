@@ -1,6 +1,7 @@
 package net.luko.bestia.server;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.data.PlayerBestiaryStore;
@@ -15,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
@@ -27,6 +29,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
@@ -34,6 +37,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +69,35 @@ public class ServerModEvents {
         player.getPersistentData().put("Bestiary", tag);
 
         PlayerBestiaryStore.remove(player);
+    }
+
+    private static int tickCounter = 0;
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event){
+        if(event.phase != TickEvent.Phase.END) return;
+
+        tickCounter++;
+        if(tickCounter >= BestiaCommonConfig.AUTOSAVE_INTERVAL.get()){
+            tickCounter = 0;
+            autosaveAllPlayers();
+        }
+    }
+
+    private static void autosaveAllPlayers(){
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if(server == null) return;
+
+        List<ServerPlayer> playerList = server.getPlayerList().getPlayers();
+        for(ServerPlayer player : playerList){
+            BestiaryManager manager = PlayerBestiaryStore.get(player);
+            if(manager != null){
+                CompoundTag tag = manager.serializeNBT();
+                player.getPersistentData().put("Bestiary", tag);
+            }
+        }
+
+        Bestia.LOGGER.info("Autosaved Bestiary data for {} player{}", playerList.size(), playerList.size() == 1 ? "" : "s");
     }
 
     @SubscribeEvent
