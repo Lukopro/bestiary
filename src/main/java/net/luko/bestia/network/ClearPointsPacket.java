@@ -29,13 +29,10 @@ public class ClearPointsPacket {
     public static void handle(ClearPointsPacket packet, Supplier<NetworkEvent.Context> contextSupplier){
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
-            Bestia.LOGGER.info("Handling");
             ServerPlayer player = context.getSender();
             if(player != null){
                 BestiaryManager manager = PlayerBestiaryStore.get(player);
-                Bestia.LOGGER.info("Clearing");
                 manager.onClearPointsWithSync(player, packet.mobId);
-                Bestia.LOGGER.info("Gucci");
             }
         });
         context.setPacketHandled(true);
