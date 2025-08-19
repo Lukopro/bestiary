@@ -1,6 +1,5 @@
 -~ THIS IS FOR PERSONAL USE, DO NOT EXPECT THESE CHANGES ~-
 
-- BUFFS: damage (specialized? flame, ice), resistance, fire immunity, loot boost, movement slower, boost player movement, thorns,
 - Loot info for mobs
 - More scrolling (drag mouse, middle mouse click, sidebar)
 - Split Common config partially with a server config

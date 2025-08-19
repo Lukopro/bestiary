@@ -1,13 +1,17 @@
 package net.luko.bestia.data;
 
+import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.buff.MobBuff;
+import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.util.LevelFormula;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public record BestiaryData(
@@ -47,25 +51,33 @@ public record BestiaryData(
         int levelsPerPoint = BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
         int totalPoints = level / levelsPerPoint;
         int remainingPoints = totalPoints;
-        for(var points : spentPoints.values()){
-            remainingPoints -= points;
+
+        List<ResourceLocation> invalidKeys = new ArrayList<>();
+        for(var entry : spentPoints.entrySet()){
+            if(SpecialBuffRegistry.get(entry.getKey()) == null){
+                Bestia.LOGGER.warn("Could not find {} in the Special Buff Registry, removing spent points...", entry.getKey());
+                invalidKeys.add(entry.getKey());
+                continue;
+            }
+            remainingPoints -= entry.getValue();
         }
 
-        Map<ResourceLocation, Integer> spentPointsArg = spentPoints;
+        for(ResourceLocation invalid : invalidKeys) spentPoints.remove(invalid);
+
         if(remainingPoints < 0){
-            spentPointsArg = new HashMap<>();
+            spentPoints = new HashMap<>();
             remainingPoints = totalPoints;
         }
 
-        for(var entry : spentPointsArg.entrySet()){
+        for(var entry : spentPoints.entrySet()){
             int max = SpecialBuffRegistry.get(entry.getKey()).getMaxLevel();
             if(entry.getValue() > max){
                 remainingPoints += entry.getValue() - max;
-                spentPointsArg.put(entry.getKey(), max);
+                spentPoints.put(entry.getKey(), max);
             }
         }
 
         return new BestiaryData(kills, level, remainingKills, mobBuff,
-                totalPoints, remainingPoints, spentPointsArg);
+                totalPoints, remainingPoints, spentPoints);
     }
 }

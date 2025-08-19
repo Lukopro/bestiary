@@ -50,9 +50,9 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected Map<SpecialBuff<?>, CustomButton> specialBuffButtons = new HashMap<>();
 
     protected ResourceLocation DEFAULT_BUFF_ICON_UNHOVERED =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buffs/default.png");
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default.png");
     protected ResourceLocation DEFAULT_BUFF_ICON_HOVERED =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buffs/default_hovered.png");
+            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default_hovered.png");
 
     protected Map<SpecialBuff<?>, Integer> orderedBuffs;
 
@@ -78,25 +78,15 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             for(var buff : this.orderedBuffs.entrySet()){
                 ResourceLocation buffId = buff.getKey().getId();
 
-                String iconUnhoveredPath = "textures/gui/bestiary/buff/" + buffId.getPath() + ".png";
                 ResourceLocation iconUnhoveredTexture = ResourceLocation.fromNamespaceAndPath(
-                        buffId.getNamespace(), iconUnhoveredPath);
+                        buffId.getNamespace(), "textures/gui/bestiary/buff/" + buffId.getPath() + ".png");
 
-                String iconHoveredPath = "textures/gui/bestiary/buff/" + buffId.getPath() + "_hovered.png";
                 ResourceLocation iconHoveredTexture = ResourceLocation.fromNamespaceAndPath(
-                        buffId.getNamespace(), iconHoveredPath);
-                try {
-                    Minecraft.getInstance().getResourceManager().getResource(iconUnhoveredTexture);
-                }catch(Exception e){
-                    Bestia.LOGGER.warn("Missing texture for {}", iconUnhoveredTexture);
-                    iconUnhoveredTexture = DEFAULT_BUFF_ICON_UNHOVERED;
-                    iconHoveredTexture = DEFAULT_BUFF_ICON_HOVERED;
-                }
+                        buffId.getNamespace(), "textures/gui/bestiary/buff/" + buffId.getPath() + "_hovered.png");
 
-                try {
-                    Minecraft.getInstance().getResourceManager().getResource(iconHoveredTexture);
-                }catch(Exception e){
-                    Bestia.LOGGER.warn("Missing texture for {}", iconHoveredTexture);
+                if(Minecraft.getInstance().getResourceManager().getResource(iconUnhoveredTexture).isEmpty()
+                || Minecraft.getInstance().getResourceManager().getResource(iconHoveredTexture).isEmpty()){
+                    Bestia.LOGGER.warn("Missing texture for special buff: {}", buffId);
                     iconUnhoveredTexture = DEFAULT_BUFF_ICON_UNHOVERED;
                     iconHoveredTexture = DEFAULT_BUFF_ICON_HOVERED;
                 }

@@ -15,9 +15,13 @@ public class BestiaCommonConfig {
     public static ForgeConfigSpec.IntValue REROLL_MAX_LEVEL;
     public static ForgeConfigSpec.IntValue EXECUTE_MAX_LEVEL;
     public static ForgeConfigSpec.IntValue LIFESTEAL_MAX_LEVEL;
+    public static ForgeConfigSpec.IntValue REFLEX_MAX_LEVEL;
+    public static ForgeConfigSpec.IntValue DAZE_MAX_LEVEL;
 
     public static ForgeConfigSpec.DoubleValue EXECUTE_BUFF_PER_LEVEL;
     public static ForgeConfigSpec.DoubleValue LIFESTEAL_BUFF_PER_LEVEL;
+    public static ForgeConfigSpec.DoubleValue REFLEX_BUFF_PER_LEVEL;
+    public static ForgeConfigSpec.IntValue DAZE_BUFF_PER_LEVEL;
 
     public static ForgeConfigSpec.IntValue MAX_LEVEL;
     public static ForgeConfigSpec.ConfigValue<String> KILLS_FORMULA;
@@ -50,6 +54,8 @@ public class BestiaCommonConfig {
                 .comment("How many levels until a special buff point is earned? (default: 10)")
                 .defineInRange("levelsPerSpecialPoint", 10, 1, 100);
 
+
+
         REROLL_MAX_LEVEL = builder
                 .comment("How many levels can you apply to special buff 'reroll'? (default: 3, 0 to disable)")
                 .defineInRange("rerollMaxLevel", 3, 0, Integer.MAX_VALUE);
@@ -62,6 +68,16 @@ public class BestiaCommonConfig {
                 .comment("How many levels can you apply to special buff 'lifesteal'? (default: 5, 0 to disable)")
                 .defineInRange("lifestealMaxLevel", 5, 0, Integer.MAX_VALUE);
 
+        REFLEX_MAX_LEVEL = builder
+                .comment("How many levels can you apply to special buff 'reflex'? (default: 5, 0 to disable)")
+                .defineInRange("reflexMaxLevel", 5, 0, Integer.MAX_VALUE);
+
+        DAZE_MAX_LEVEL = builder
+                .comment("How many levels can you apply to special buff 'daze'? (default: 3, 0 to disable)")
+                .defineInRange("dazeMaxLevel", 3, 0, Integer.MAX_VALUE);
+
+
+
         EXECUTE_BUFF_PER_LEVEL = builder
                 .comment("How much should be added to the execute buff's threshold per level? (default: 0.1)")
                 .defineInRange("executeBuffPerLevel", 0.1, 0.0, 1.0);
@@ -69,6 +85,14 @@ public class BestiaCommonConfig {
         LIFESTEAL_BUFF_PER_LEVEL = builder
                 .comment("How much health should be stolen per livesteal level? (default: 0.05)")
                 .defineInRange("lifestealBuffPerLevel", 0.05, 0.0, 1.0);
+
+        REFLEX_BUFF_PER_LEVEL = builder
+                .comment("How much knockback should be applied to attacking mobs? (default: 0.4)")
+                .defineInRange("reflexBuffPerLevel", 0.4, 0.0, 100.0);
+
+        DAZE_BUFF_PER_LEVEL = builder
+                .comment("How many ticks should affected mobs be dazed for? (default: 8)")
+                .defineInRange("dazeBuffPerLevel", 8, 0, Integer.MAX_VALUE);
 
         builder.pop();
 

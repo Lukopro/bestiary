@@ -44,9 +44,6 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerModEvents {
-    private static final ResourceLocation EXECUTE_SOURCE = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute");
-    private static final ResourceKey<Registry<DamageType>> DAMAGE_TYPE_REGISTRY_KEY =
-            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath("minecraft", "damage_type"));
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
@@ -65,7 +62,12 @@ public class ServerModEvents {
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event){
         if(!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        CompoundTag tag = PlayerBestiaryStore.get(player).serializeNBT();
+        BestiaryManager manager = PlayerBestiaryStore.get(player);
+        if(manager == null){
+            Bestia.LOGGER.warn("Bestiary manager for player {} was null", player);
+            return;
+        }
+        CompoundTag tag = manager.serializeNBT();
         player.getPersistentData().put("Bestiary", tag);
 
         PlayerBestiaryStore.remove(player);
@@ -140,79 +142,6 @@ public class ServerModEvents {
 
         float modifier = buff.resistanceFactor();
         event.setAmount(event.getAmount() * modifier);
-    }
-
-    @SubscribeEvent
-    public static void applyRerollBuff(LivingDropsEvent event){
-        if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-        LivingEntity entity = event.getEntity();
-        Level level = entity.level();
-        if(level.isClientSide) return;
-
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-        BestiaryManager manager = PlayerBestiaryStore.get(player);
-        if(manager == null) return;
-        int rerolls = manager.getSpecialBuffValue(SpecialBuffRegistry.REROLL, mobId);
-        if(rerolls <= 0) return;
-
-        MinecraftServer server = level.getServer();
-        if(server == null) return;
-        LootTable lootTable = server.getLootData().getLootTable(entity.getLootTable());
-        if(lootTable == LootTable.EMPTY) return;
-
-        List<ItemStack> extraLoot = new ArrayList<>();
-
-        LootParams lootParams = new LootParams.Builder((ServerLevel) level)
-                .withParameter(LootContextParams.THIS_ENTITY, entity)
-                .withParameter(LootContextParams.ORIGIN, entity.position())
-                .withParameter(LootContextParams.DAMAGE_SOURCE, event.getSource())
-                .withOptionalParameter(LootContextParams.LAST_DAMAGE_PLAYER, player)
-                .withOptionalParameter(LootContextParams.KILLER_ENTITY, player)
-                .create(LootContextParamSets.ENTITY);
-
-        for(int i = 0; i < rerolls; i++){
-            extraLoot.addAll(lootTable.getRandomItems(lootParams));
-        }
-
-        for(ItemStack stack : extraLoot){
-            ItemEntity itemEntity = new ItemEntity(level, entity.getX(), entity.getEyeY(), entity.getZ(), stack);
-            event.getDrops().add(itemEntity);
-        }
-    }
-
-    @SubscribeEvent
-    public static void applyExecuteBuff(LivingHurtEvent event){
-        if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-
-        LivingEntity entity = event.getEntity();
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-
-        BestiaryManager manager = PlayerBestiaryStore.get(player);
-        if(manager == null) return;
-        float threshold = manager.getSpecialBuffValue(SpecialBuffRegistry.EXECUTE, mobId);
-        if(threshold <= 0F) return;
-
-        if(entity.getHealth() <= entity.getMaxHealth() * threshold){
-            Holder<DamageType> holder = player.server.registryAccess()
-                    .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, EXECUTE_SOURCE));
-
-            entity.hurt(new DamageSource(holder), entity.getMaxHealth());
-
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
-    public static void applyLifestealBuff(LivingDamageEvent event){
-        if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-
-        BestiaryManager manager = PlayerBestiaryStore.get(player);
-        if(manager == null) return;
-        float lifesteal = manager.getSpecialBuffValue(SpecialBuffRegistry.LIFESTEAL, mobId);
-        if(lifesteal <= 0F) return;
-
-        player.heal(event.getAmount() * lifesteal);
     }
 
 }
