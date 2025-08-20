@@ -9,6 +9,9 @@ import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ClearPointsPacket;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.SpendPointPacket;
+import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
+import net.luko.bestia.screen.side.BestiarySideScreenComponent;
+import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.util.ResourceUtil;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
@@ -26,7 +29,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenComponent{
+public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenComponent {
     protected final ResourceLocation mobId;
     protected BestiaryData data;
     protected final EntityType<?> entityType;
@@ -150,7 +153,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         int adjustedX = this.x + BORDER_SIZE + PADDING;
         int adjustedY = this.y + BORDER_SIZE + PADDING;
-        float headerScale = (float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH;
+        float headerScale = (float)this.availableWidth / (float) BestiaryEntryScreenComponent.ENTRY_WIDTH;
         poseStack.pushPose();
         poseStack.scale(headerScale, headerScale, 1.0F);
         this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale));

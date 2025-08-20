@@ -1,4 +1,4 @@
-package net.luko.bestia.screen;
+package net.luko.bestia.screen.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,9 +14,9 @@ public class CustomButton extends Button {
     private int uvY;
     float scale = 1.0F;
 
-    protected CustomButton(int pX, int pY, int pWidth, int pHeight, OnPress pOnPress,
-                           ResourceLocation texture, ResourceLocation hoveredTexture,
-                           float scale) {
+    public CustomButton(int pX, int pY, int pWidth, int pHeight, OnPress pOnPress,
+                        ResourceLocation texture, ResourceLocation hoveredTexture,
+                        float scale) {
         super(pX, pY, pWidth, pHeight, Component.literal(""), pOnPress, Button.DEFAULT_NARRATION);
         this.texture = texture;
         this.hoveredTexture = hoveredTexture;
@@ -25,7 +25,7 @@ public class CustomButton extends Button {
         this.uvY = (int)(this.height / scale);
     }
 
-    protected CustomButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress) {
+    public CustomButton(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress) {
         super(pX, pY, pWidth, pHeight, pMessage, pOnPress, Button.DEFAULT_NARRATION);
         this.texture = null;
         this.hoveredTexture = null;

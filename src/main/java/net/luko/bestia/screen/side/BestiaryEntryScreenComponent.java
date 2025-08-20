@@ -1,4 +1,4 @@
-package net.luko.bestia.screen;
+package net.luko.bestia.screen.side;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -7,6 +7,8 @@ import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.screen.BestiaryScreen;
+import net.luko.bestia.screen.BestiaryTooltip;
 import net.luko.bestia.util.ResourceUtil;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;

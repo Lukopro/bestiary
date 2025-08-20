@@ -1,8 +1,11 @@
-package net.luko.bestia.screen;
+package net.luko.bestia.screen.side;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.screen.BestiaryScreen;
+import net.luko.bestia.screen.BestiaryTooltip;
+import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

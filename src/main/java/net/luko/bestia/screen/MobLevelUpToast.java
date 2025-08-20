@@ -3,6 +3,7 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

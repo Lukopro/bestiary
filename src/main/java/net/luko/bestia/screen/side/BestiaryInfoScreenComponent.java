@@ -1,5 +1,6 @@
-package net.luko.bestia.screen;
+package net.luko.bestia.screen.side;
 
+import net.luko.bestia.screen.BestiaryScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

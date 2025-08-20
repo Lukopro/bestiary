@@ -5,5 +5,4 @@
 - More scrolling (drag mouse, middle mouse click, sidebar)
 - Split Common config partially with a server config
 - Leaderboards
-- Compat with "Fresh Animations"
 - Index textures to cut filesize

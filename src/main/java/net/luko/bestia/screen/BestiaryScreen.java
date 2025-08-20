@@ -6,6 +6,10 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
+import net.luko.bestia.screen.side.BestiaryInfoScreenComponent;
+import net.luko.bestia.screen.side.BestiarySideScreenComponent;
+import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static net.luko.bestia.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
+import static net.luko.bestia.screen.side.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
 
 public class BestiaryScreen extends Screen {
     private static final ResourceLocation PANEL_TEXTURE =
@@ -68,7 +72,6 @@ public class BestiaryScreen extends Screen {
     public static final int MARGIN = 4;
 
     private float scrollAmount = 0F;
-    private int totalContentHeight = 0;
 
     private int leftPosPrev;
 
@@ -107,8 +110,6 @@ public class BestiaryScreen extends Screen {
     @Override
     protected void init(){
         super.init();
-
-        totalContentHeight = bestiaryEntryScreenComponents.size() * (ENTRY_HEIGHT + PADDING);
 
         this.leftPos = (this.width - PANEL_BLIT_WIDTH) / 2;
         this.leftPosPrev = this.leftPos;
@@ -462,7 +463,9 @@ public class BestiaryScreen extends Screen {
             this.scrollAmount -= (float) delta * 30F;
 
             int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
-            float maxScroll = Math.max(0, (totalContentHeight / this.zoom / this.zoom) - visibleHeight);
+            int rows = (int)Math.ceil((float)filteredEntries.size() / (float)this.zoom);
+            float contentHeight = rows * (ENTRY_HEIGHT + PADDING);
+            float maxScroll = Math.max(0, contentHeight / this.zoom - visibleHeight);
 
             this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
             return true;
