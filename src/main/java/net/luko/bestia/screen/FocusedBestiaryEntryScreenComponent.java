@@ -63,7 +63,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         this.mobId = mobId;
         this.data = data;
-        this.entry = new BestiaryEntryScreenComponent(this.mobId, this.data, null);
+        this.entry = new BestiaryEntryScreenComponent(this.mobId, this.data, null, true);
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
 
         this.FONT = Minecraft.getInstance().font;
@@ -152,7 +152,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         float headerScale = (float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH;
         poseStack.pushPose();
         poseStack.scale(headerScale, headerScale, 1.0F);
-        this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale), false);
+        this.entry.render(guiGraphics, scaled(adjustedX, headerScale) + 1, scaled(adjustedY, headerScale));
         poseStack.popPose();
 
         for(BestiaryTooltip tooltip : this.entry.getTooltips()){

@@ -82,7 +82,7 @@ public class BestiaryScreen extends Screen {
         shownBefore = BestiaClientConfig.SHOWN_BEFORE.get();
         for(var entry : entries.entrySet()){
             this.bestiaryEntryScreenComponents.add(
-                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
+                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this, false));
         }
         this.filterEntries("");
     }
@@ -160,7 +160,7 @@ public class BestiaryScreen extends Screen {
         this.bestiaryEntryScreenComponents.clear();
         for(var entry : entries.entrySet()){
             this.bestiaryEntryScreenComponents.add(
-                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this));
+                    new BestiaryEntryScreenComponent(entry.getKey(), entry.getValue(), this, false));
         }
         this.updateSearch();
     }
@@ -395,7 +395,7 @@ public class BestiaryScreen extends Screen {
 
         for(var entry : filteredEntries){
             if(y > -ENTRY_HEIGHT && y < this.height * this.zoom){
-                entry.render(guiGraphics, xCoords[column], y, true);
+                entry.render(guiGraphics, xCoords[column], y);
                 if(mouseInScissor(mouseX, mouseY)) entry.checkMouse(xCoords[column], y, mouseX * this.zoom, mouseY * this.zoom);
             }
 

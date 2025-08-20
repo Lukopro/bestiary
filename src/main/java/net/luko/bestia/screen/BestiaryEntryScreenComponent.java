@@ -1,9 +1,13 @@
 package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,9 +23,8 @@ import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BestiaryEntryScreenComponent {
     private static final int COMPONENT_TEXTURE_HEIGHT = 48;
@@ -61,6 +64,7 @@ public class BestiaryEntryScreenComponent {
     private final BestiaryData data;
     private final EntityType<?> entityType;
     private final @Nullable BestiaryScreen parentScreen;
+    private final boolean focused;
 
     private Set<BestiaryTooltip> tooltips = new HashSet<>();
 
@@ -68,11 +72,12 @@ public class BestiaryEntryScreenComponent {
 
     public boolean mouseIsHovering = false;
 
-    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data, @Nullable BestiaryScreen parentScreen){
+    public BestiaryEntryScreenComponent(ResourceLocation mobId, BestiaryData data, @Nullable BestiaryScreen parentScreen, boolean focused){
         this.mobId = mobId;
         this.data = data;
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
         this.parentScreen = parentScreen;
+        this.focused = focused;
     }
 
     public String getDisplayName(){
@@ -97,7 +102,7 @@ public class BestiaryEntryScreenComponent {
         this.mouseIsHovering = false;
     }
 
-    public void render(GuiGraphics guiGraphics, int x, int y, boolean withNotificationBadge){
+    public void render(GuiGraphics guiGraphics, int x, int y){
         this.tooltips.clear();
 
         int rightTitleX = this.drawTitle(guiGraphics, x + 2, y, this.getDisplayName());
@@ -110,18 +115,11 @@ public class BestiaryEntryScreenComponent {
 
         this.drawLevelText(guiGraphics, x, y);
 
-        if(entityType != null) this.drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
+        if(this.entityType != null) this.drawMobIcon(guiGraphics, x + 8, y + TITLE_TEXTURE_HEIGHT + 12, entityType);
 
-        guiGraphics.drawString(FONT,
-                String.format("x%.2f damage dealt",
-                        data.mobBuff().damageFactor()),
-                x + 52, y + 24, 0xAAAAAA);
-        guiGraphics.drawString(FONT,
-                String.format("x%.3f damage taken",
-                        data.mobBuff().resistanceFactor()),
-                        x + 52, y + 40, 0xAAAAAA);
+        this.drawContent(guiGraphics, x + 48, 116, y + TITLE_TEXTURE_HEIGHT + 5, 38);
 
-        if(withNotificationBadge) this.drawNotificationBadge(guiGraphics, rightTitleX - 4, y - 4);
+        if(!this.focused && BestiaClientConfig.SHOW_NOTIFICATION_BADGES.get() && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()) this.drawNotificationBadge(guiGraphics, rightTitleX - 4, y - 4);
 
         this.tooltips.add(new BestiaryTooltip(
                 x, x + ENTRY_WIDTH,
@@ -138,11 +136,177 @@ public class BestiaryEntryScreenComponent {
         this.mouseIsHovering = false;
     }
 
+    private final int xPadding = 3;
+    private final int verticalPadding = 5;
+
+    private void drawContent(GuiGraphics guiGraphics, int x, int width, int y, int height) {
+        String fullDamageText = String.format("x%.2f damage dealt",
+                data.mobBuff().damageFactor());
+
+        String fullResistanceText = String.format("x%.3f damage taken",
+                data.mobBuff().resistanceFactor());
+        if(!focused && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()){
+            ResourceLocation damageTexture = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/damage.png");
+            ResourceLocation resistanceTexture = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/resistance.png");
+            String damageText = String.format("x%.2f", data.mobBuff().damageFactor());
+            String resistanceText = String.format("x%.3f", data.mobBuff().resistanceFactor());
+
+            int iconSize = 12;
+            int damageTextWidth = FONT.width(damageText);
+            int resistanceTextWidth = FONT.width(resistanceText);
+            int damageWidth = iconSize + xPadding + damageTextWidth;
+            int resistanceWidth = iconSize + xPadding + resistanceTextWidth;
+
+            int totalAllowedPadding = width - damageWidth - resistanceWidth;
+
+            // To ensure rounding doesn't offcenter the damage and resistance,
+            // modular division is used to see how much can be given to left, middle, and right padding.
+
+            int leftPad = totalAllowedPadding % 3 == 2 ? totalAllowedPadding / 3 + 1 : totalAllowedPadding / 3;
+            int midPad = totalAllowedPadding % 3 == 1 ? totalAllowedPadding / 3 + 1 : totalAllowedPadding / 3;
+
+            int nextX = x + leftPad;
+
+            guiGraphics.blit(damageTexture, nextX, y + verticalPadding,
+                    iconSize, iconSize,
+                    0, 0,
+                    iconSize, iconSize,
+                    iconSize, iconSize);
+            this.tooltips.add(new BestiaryTooltip(nextX, nextX + iconSize,
+                    y + verticalPadding, y + verticalPadding + iconSize,
+                    List.of(Component.literal(fullDamageText))));
+            nextX += iconSize + xPadding;
+
+            guiGraphics.drawString(FONT, damageText, nextX, y + verticalPadding + 2, 0xFFFFFF);
+            nextX += damageTextWidth + midPad;
+            guiGraphics.blit(resistanceTexture, nextX, y + verticalPadding,
+                    iconSize, iconSize,
+                    0, 0,
+                    iconSize, iconSize,
+                    iconSize, iconSize);
+            this.tooltips.add(new BestiaryTooltip(nextX, nextX + iconSize,
+                    y + verticalPadding, y + verticalPadding + iconSize,
+                    List.of(Component.literal(fullDamageText))));
+            nextX += iconSize + xPadding;
+            guiGraphics.drawString(FONT, resistanceText, nextX, y + verticalPadding + 2, 0xFFFFFF);
+
+            if(data.totalPoints() == data.remainingPoints()){
+                String sbText = "No special buffs.";
+                int sbTextWidth = FONT.width(sbText);
+                int sbTextX = x + (width / 2) - (sbTextWidth / 2);
+                guiGraphics.drawString(FONT, sbText, sbTextX, y + height - verticalPadding - FONT.lineHeight - 2, 0xAAAAAA);
+            } else {
+                this.drawIconsAndRoman(guiGraphics, x, width, y + height - verticalPadding - iconSize);
+            }
+
+        } else {
+            guiGraphics.drawString(FONT,
+                    fullDamageText,
+                    x + xPadding, y + verticalPadding + 2, 0xAAAAAA);
+            guiGraphics.drawString(FONT,
+                    fullResistanceText,
+                    x + xPadding, y + height - verticalPadding - FONT.lineHeight - 2, 0xAAAAAA);
+        }
+    }
+
+    private void drawIconsAndRoman(GuiGraphics guiGraphics, int x, int width, int y){
+        Map<ResourceLocation, Integer> applicableSpecialBuffs = new LinkedHashMap<>(data.spentPoints().entrySet().stream()
+                .filter(entry -> SpecialBuffRegistry.get(entry.getKey()) != null)
+                .filter(entry -> entry.getValue() > 0)
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                )));
+
+        List<RenderableSpecialBuff> toBlit = new ArrayList<>();
+        int totalToBlitWidth = 0;
+        int additionalBuffs = 0;
+        String additionalBuffsText = "";
+        for(var entry : applicableSpecialBuffs.entrySet()){
+            RenderableSpecialBuff ir = new RenderableSpecialBuff(entry.getKey(), entry.getValue());
+            totalToBlitWidth += ir.width() + xPadding;
+
+            if(totalToBlitWidth >= width){
+                int buffsLeftOver = applicableSpecialBuffs.size() - toBlit.size();
+                if(buffsLeftOver > 0 && !toBlit.isEmpty()){
+                    RenderableSpecialBuff last = toBlit.get(toBlit.size() - 1);
+                    totalToBlitWidth -= last.width();
+                    toBlit.remove(toBlit.size() - 1);
+                    additionalBuffs = buffsLeftOver + 1;
+                    additionalBuffsText = "+" + additionalBuffs;
+                    while(totalToBlitWidth >= width - FONT.width(additionalBuffsText)){
+                        last = toBlit.get(toBlit.size() - 1);
+                        totalToBlitWidth -= last.width();
+                        toBlit.remove(toBlit.size() - 1);
+                        additionalBuffs++;
+                        additionalBuffsText = "+" + additionalBuffs;
+                    }
+                }
+                break;
+            }
+
+            toBlit.add(ir);
+        }
+
+        int totalWidth = FONT.width(additionalBuffsText);
+        for(RenderableSpecialBuff ir : toBlit){
+            totalWidth += ir.width() + xPadding;
+        }
+
+        int nextX = x + (width / 2) - (totalWidth / 2);
+        for(RenderableSpecialBuff ir : toBlit) nextX = ir.blitAndAddTooltip(guiGraphics, nextX, y, this.tooltips) + xPadding;
+        if(additionalBuffs > 0) guiGraphics.drawString(FONT, additionalBuffsText, nextX, y + 2, 0xAAAAAA);
+    }
+
+    private record RenderableSpecialBuff(ResourceLocation buff, Integer level){
+        private static int ICON_SIZE = 12;
+        private static float ROMAN_SCALE = 0.6F;
+
+        private String roman(){
+            return RomanUtil.toRoman(level);
+        }
+
+        private ResourceLocation icon(){
+            return ResourceLocation.fromNamespaceAndPath(
+                    buff().getNamespace(), "textures/gui/bestiary/buff/" + buff().getPath() + ".png");
+        }
+
+        private int width(){
+            return ICON_SIZE + (int)Math.ceil((float)FONT.width(this.roman()) * ROMAN_SCALE);
+        }
+
+        // x: left, y: center
+        private int blitAndAddTooltip(GuiGraphics guiGraphics, int x, int y, Set<BestiaryTooltip> tooltips){
+            guiGraphics.blit(this.icon(), x, y,
+                    ICON_SIZE, ICON_SIZE,
+                    0, 0,
+                    ICON_SIZE, ICON_SIZE,
+                    ICON_SIZE, ICON_SIZE);
+            tooltips.add(new BestiaryTooltip(x, x + ICON_SIZE, y, y + ICON_SIZE,
+                    List.of(Component.literal(String.format("%s %s",
+                            Component.translatable("buff.special." + this.buff.getNamespace() + "." + this.buff.getPath()).getString(), this.roman())))));
+
+            PoseStack poseStack = guiGraphics.pose();
+            poseStack.pushPose();
+            poseStack.scale(ROMAN_SCALE, ROMAN_SCALE, 1F);
+            poseStack.translate((float)(x + ICON_SIZE) / ROMAN_SCALE, (float)y / ROMAN_SCALE, 0);
+
+            String roman = this.roman();
+            int romanWidth = FONT.width(roman);
+            guiGraphics.drawString(FONT, roman, (-romanWidth) / 2, 0, 0xFFFFFF);
+
+            poseStack.popPose();
+
+            return x + this.width();
+        }
+    }
+
     public Set<BestiaryTooltip> getTooltips(){
         return this.tooltips;
     }
-
-    private final int xPadding = 3;
 
     private int getTitleBlitWidth(String name){
         return TITLE_TEXTURE_LEFT_WIDTH + xPadding * 2 + FONT.width(name) + TITLE_TEXTURE_RIGHT_WIDTH;
@@ -277,6 +441,9 @@ public class BestiaryEntryScreenComponent {
                     widgetX, widgetY,
                     widgetWidth, widgetHeight,
                     66, 11);
+
+            this.tooltips.add(new BestiaryTooltip(x, x + widgetWidth, y, y + widgetHeight,
+                    List.of(Component.literal(String.format("%d unspent points", unspentPoints)))));
         }
     }
 
@@ -349,7 +516,7 @@ public class BestiaryEntryScreenComponent {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button){
-        if(this.mouseIsHovering && button == 0){
+        if(this.mouseIsHovering && button == 0 && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()){
             if(this.parentScreen != null) parentScreen.openFocusedEntryScreenComponent(this.mobId, this.data);
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             return true;
