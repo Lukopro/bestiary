@@ -1,9 +1,11 @@
 package net.luko.bestia.data;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.network.MobLevelUpToastPacket;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.BestiarySyncPacket;
 import net.minecraft.nbt.CompoundTag;
@@ -95,11 +97,15 @@ public class BestiaryManager {
     }
 
     public void setKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
-        this.killCounts.put(mobId, kills);
         BestiaryData newData = BestiaryData.compute(kills, this.spentPoints.getOrDefault(mobId, new HashMap<>()));
+        int oldLevel = this.getData(mobId).level();
+
+        this.killCounts.put(mobId, kills);
         this.cachedData.put(mobId, newData);
         this.spentPoints.put(mobId, newData.spentPoints());
+
         syncToPlayer(player);
+        if(newData.level() != oldLevel) sendToast(player, mobId);
     }
 
     public void addKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
@@ -169,6 +175,13 @@ public class BestiaryManager {
         ModPackets.CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> player),
                 new BestiarySyncPacket(this.getAllData())
+        );
+    }
+
+    public void sendToast(ServerPlayer player, ResourceLocation mobId){
+        if(BestiaClientConfig.SHOW_LEVEL_UP_TOASTS.get()) ModPackets.CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new MobLevelUpToastPacket(mobId)
         );
     }
 

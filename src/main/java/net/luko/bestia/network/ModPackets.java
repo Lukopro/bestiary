@@ -32,5 +32,10 @@ public class ModPackets {
                 ClearPointsPacket::encode,
                 ClearPointsPacket::decode,
                 ClearPointsPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, MobLevelUpToastPacket.class,
+                MobLevelUpToastPacket::encode,
+                MobLevelUpToastPacket::decode,
+                MobLevelUpToastPacket::handle);
     }
 }

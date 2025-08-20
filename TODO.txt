@@ -1,6 +1,9 @@
 -~ THIS IS FOR PERSONAL USE, DO NOT EXPECT THESE CHANGES ~-
 
+- Config filter for entities (no data interaction serverside, no display client side, command autofill excludes them)
 - Loot info for mobs
 - More scrolling (drag mouse, middle mouse click, sidebar)
 - Split Common config partially with a server config
 - Leaderboards
+- Compat with "Fresh Animations"
+- Index textures to cut filesize

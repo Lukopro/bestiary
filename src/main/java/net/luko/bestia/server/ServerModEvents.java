@@ -111,6 +111,8 @@ public class ServerModEvents {
                 event.getEntity().getType());
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
+        if(manager == null) return;
+
         manager.onKillWithSync(player, mobId);
 
         // Later on, do this less often
