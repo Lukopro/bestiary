@@ -6,6 +6,7 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -21,7 +22,7 @@ import static net.luko.bestia.screen.BestiaryEntryScreenComponent.ENTRY_HEIGHT;
 
 public class BestiaryScreen extends Screen {
     private static final ResourceLocation PANEL_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/panel.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/panel.png");
 
     private static final int PANEL_TEXTURE_WIDTH = 336;
     private static final int PANEL_TEXTURE_HEIGHT = 384;

@@ -3,6 +3,7 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryData;
+import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class MobLevelUpToast implements Toast {
     private static final ResourceLocation BACKGROUND_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/side_panel.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/side_panel.png");
     private static final int BACKGROUND_TEXTURE_BORDER_SIZE = 9;
     protected static final int BACKGROUND_TEXTURE_WIDTH = 240;
     protected static final int BACKGROUND_TEXTURE_HEIGHT = 294;

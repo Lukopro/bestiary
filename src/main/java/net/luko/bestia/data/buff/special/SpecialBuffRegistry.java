@@ -2,6 +2,7 @@ package net.luko.bestia.data.buff.special;
 
 import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaCommonConfig;
+import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collection;
@@ -26,22 +27,22 @@ public class SpecialBuffRegistry {
         int dazeMax = BestiaCommonConfig.DAZE_MAX_LEVEL.get();
 
         REROLL = register(new IntegerBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reroll"),
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "reroll"),
                 0, 1, rerollMax));
         EXECUTE = register(new FloatBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute"),
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "execute"),
                 0.0F, BestiaCommonConfig.EXECUTE_BUFF_PER_LEVEL.get().floatValue(), executeMax, true));
         LIFESTEAL = register(new FloatBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "lifesteal"),
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "lifesteal"),
                 0.0F, BestiaCommonConfig.LIFESTEAL_BUFF_PER_LEVEL.get().floatValue(), lifestealMax, true));
         REFLEX = register(new FloatBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "reflex"),
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "reflex"),
                 0.0F, BestiaCommonConfig.REFLEX_BUFF_PER_LEVEL.get().floatValue(), reflexMax, false));
         DAZE = register(new IntegerBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "daze"),
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "daze"),
                 0, BestiaCommonConfig.DAZE_BUFF_PER_LEVEL.get(), dazeMax));
         HOLD = register(new BooleanBuff(
-                ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "hold")));
+                ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "hold")));
     }
 
     public static <T> SpecialBuff<T> register(SpecialBuff<T> buff){

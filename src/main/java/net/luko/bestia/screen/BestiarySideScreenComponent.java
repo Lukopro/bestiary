@@ -3,6 +3,7 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -32,7 +33,7 @@ public abstract class BestiarySideScreenComponent {
     protected Set<BestiaryTooltip> tooltips = new HashSet<>();
 
     protected static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/side_panel.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/side_panel.png");
 
     public BestiarySideScreenComponent(int x, int y, int width, BestiaryScreen parentScreen){
         this.x = x;

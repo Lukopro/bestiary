@@ -9,6 +9,7 @@ import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.ClearPointsPacket;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.SpendPointPacket;
+import net.luko.bestia.util.ResourceUtil;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -31,9 +32,9 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected final EntityType<?> entityType;
     protected final Font FONT;
     protected static final ResourceLocation LEVEL_BAR_COMPLETED_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
     protected static final ResourceLocation LEVEL_BAR_BACKGROUND_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_light.png");
 
     protected static final int LEVEL_BAR_WIDTH = 212;
     protected static final int LEVEL_BAR_LEFT_BLIT = 8;
@@ -50,9 +51,9 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected Map<SpecialBuff<?>, CustomButton> specialBuffButtons = new HashMap<>();
 
     protected ResourceLocation DEFAULT_BUFF_ICON_UNHOVERED =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default.png");
     protected ResourceLocation DEFAULT_BUFF_ICON_HOVERED =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default_hovered.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/default_hovered.png");
 
     protected Map<SpecialBuff<?>, Integer> orderedBuffs;
 
@@ -78,10 +79,10 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             for(var buff : this.orderedBuffs.entrySet()){
                 ResourceLocation buffId = buff.getKey().getId();
 
-                ResourceLocation iconUnhoveredTexture = ResourceLocation.fromNamespaceAndPath(
+                ResourceLocation iconUnhoveredTexture = ResourceUtil.fromNamespaceAndPath(
                         buffId.getNamespace(), "textures/gui/bestiary/buff/" + buffId.getPath() + ".png");
 
-                ResourceLocation iconHoveredTexture = ResourceLocation.fromNamespaceAndPath(
+                ResourceLocation iconHoveredTexture = ResourceUtil.fromNamespaceAndPath(
                         buffId.getNamespace(), "textures/gui/bestiary/buff/" + buffId.getPath() + "_hovered.png");
 
                 if(Minecraft.getInstance().getResourceManager().getResource(iconUnhoveredTexture).isEmpty()

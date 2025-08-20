@@ -7,6 +7,7 @@ import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.util.ResourceUtil;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -20,6 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 
@@ -41,23 +43,23 @@ public class BestiaryEntryScreenComponent {
     public static final int ENTRY_WIDTH = 212;
 
     private static final ResourceLocation COMPONENT_TEXTURE_DARK =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_dark.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_dark.png");
     private static final ResourceLocation COMPONENT_TEXTURE_LIGHT =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/component_light.png");
 
     private static final ResourceLocation TITLE_TEXTURE_DARK =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_dark.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_dark.png");
     private static final ResourceLocation TITLE_TEXTURE_LIGHT =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/title_light.png");
 
     private static final ResourceLocation LEVEL_COMPLETED_DARK =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_dark.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_dark.png");
     private static final ResourceLocation LEVEL_COMPLETED_LIGHT =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
     private static final ResourceLocation LEVEL_BACKGROUND_DARK =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_dark.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_dark.png");
     private static final ResourceLocation LEVEL_BACKGROUND_LIGHT =
-            ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_light.png");
+            ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_background_light.png");
 
 
     private final ResourceLocation mobId;
@@ -146,8 +148,8 @@ public class BestiaryEntryScreenComponent {
         String fullResistanceText = String.format("x%.3f damage taken",
                 data.mobBuff().resistanceFactor());
         if(!focused && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()){
-            ResourceLocation damageTexture = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/damage.png");
-            ResourceLocation resistanceTexture = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/resistance.png");
+            ResourceLocation damageTexture = ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/damage.png");
+            ResourceLocation resistanceTexture = ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/resistance.png");
             String damageText = String.format("x%.2f", data.mobBuff().damageFactor());
             String resistanceText = String.format("x%.3f", data.mobBuff().resistanceFactor());
 
@@ -270,7 +272,7 @@ public class BestiaryEntryScreenComponent {
         }
 
         private ResourceLocation icon(){
-            return ResourceLocation.fromNamespaceAndPath(
+            return ResourceUtil.fromNamespaceAndPath(
                     buff().getNamespace(), "textures/gui/bestiary/buff/" + buff().getPath() + ".png");
         }
 
@@ -423,7 +425,7 @@ public class BestiaryEntryScreenComponent {
     private void drawNotificationBadge(GuiGraphics guiGraphics, int x, int y){
         int unspentPoints = this.data.remainingPoints();
         if(unspentPoints > 0){
-            final ResourceLocation WIDGETS = ResourceLocation.fromNamespaceAndPath("bestia", "textures/gui/bestiary/badges.png");
+            final ResourceLocation WIDGETS = ResourceUtil.fromNamespaceAndPath("bestia", "textures/gui/bestiary/badges.png");
             int widgetX = switch (unspentPoints) {
                 case 1 -> 0;
                 case 2 -> 11;
@@ -461,6 +463,7 @@ public class BestiaryEntryScreenComponent {
 
             Quaternionf camera = new Quaternionf();
 
+            if(living instanceof Mob mob) mob.setNoAi(true);
             living.tickCount = 0;
             living.yBodyRot = 0;
             living.setYRot(0);

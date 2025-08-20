@@ -4,6 +4,7 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
+import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -37,9 +38,9 @@ import java.util.*;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ApplySpecialBuffs {
-    private static final ResourceLocation EXECUTE_SOURCE = ResourceLocation.fromNamespaceAndPath(Bestia.MODID, "execute");
+    private static final ResourceLocation EXECUTE_SOURCE = ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "execute");
     private static final ResourceKey<Registry<DamageType>> DAMAGE_TYPE_REGISTRY_KEY =
-            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath("minecraft", "damage_type"));
+            ResourceKey.createRegistryKey(ResourceUtil.fromNamespaceAndPath("minecraft", "damage_type"));
 
 
     @SubscribeEvent
