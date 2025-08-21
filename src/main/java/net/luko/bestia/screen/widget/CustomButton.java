@@ -50,8 +50,6 @@ public class CustomButton extends Button {
         this.active = active;
     }
 
-
-
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
         if(this.texture == null){
@@ -63,15 +61,16 @@ public class CustomButton extends Button {
 
         poseStack.pushPose();
         poseStack.scale(this.scale, this.scale, 1.0F);
-        int x = ((int)((float)this.getX() / scale));
-        int y = ((int)((float)this.getY() / scale));
+        float x = (float)this.getX() / scale;
+        float y = (float)this.getY() / scale;
+        poseStack.translate(x, y, 0F);
 
         ResourceLocation activeTexture;
         if(this.isHovered && this.hoveredTexture != null) activeTexture = this.hoveredTexture;
         else activeTexture = this.texture;
 
         guiGraphics.blit(activeTexture,
-                x, y,
+                0, 0,
                 0, 0,
                 this.uvX, this.uvY,
                 this.uvX, this.uvY);

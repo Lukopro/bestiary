@@ -10,6 +10,7 @@ import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
 import net.luko.bestia.screen.side.BestiaryInfoScreenComponent;
 import net.luko.bestia.screen.side.BestiarySideScreenComponent;
 import net.luko.bestia.screen.widget.CustomButton;
+import net.luko.bestia.screen.widget.ScrollBarWidget;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,6 +67,7 @@ public class BestiaryScreen extends Screen {
     private CustomButton infoToggleButton;
     private CustomButton zoomInButton;
     private CustomButton zoomOutButton;
+    private ScrollBarWidget scrollBar;
 
     private static boolean shownBefore;
 
@@ -105,6 +107,18 @@ public class BestiaryScreen extends Screen {
 
     protected int getZoomOutButtonX(){
         return this.leftPos + PANEL_BLIT_WIDTH - 60;
+    }
+
+    private int getScrollBarX() {
+        return this.leftPos + PANEL_BLIT_WIDTH - HORIZONTAL_ENTRY_BLIT_MARGIN + 2;
+    }
+
+    private int getScrollBarThumbHeight(){
+        return (int)(((float)this.getVisibleHeight() / this.getContentHeight()) * this.getScrollBarTrackHeight());
+    }
+
+    private int getScrollBarTrackHeight(){
+        return this.getPanelContentHeight() - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT + 12;
     }
 
     @Override
@@ -150,9 +164,16 @@ public class BestiaryScreen extends Screen {
                 btn -> this.tryZoomOut()
         );
 
+        this.scrollBar = new ScrollBarWidget(this.getScrollBarX(), this.topPos + PANEL_TOP_BLIT_HEIGHT - 6,
+                4, this.getScrollBarTrackHeight(),
+                Component.literal("Scroll"), getScrollBarThumbHeight(),
+                (normalized) -> this.scrollAmount = normalized * getMaxScroll());
+        this.scrollBar.visible = this.getMaxScroll() != 0;
+
         this.addRenderableWidget(this.infoToggleButton);
         this.addRenderableWidget(this.zoomInButton);
         this.addRenderableWidget(this.zoomOutButton);
+        this.addRenderableWidget(this.scrollBar);
 
         if(!shownBefore) openInfoScreenComponent();
         else clearSideScreenComponent();
@@ -254,21 +275,25 @@ public class BestiaryScreen extends Screen {
             activeSideScreenComponent.moveX(
                     this.leftPos + mainPanelWidthAdjustment + MARGIN);
         }
+
         if(onlySideScreen) {
             this.searchBox.visible = false;
             this.infoToggleButton.visible = false;
             this.zoomInButton.visible = false;
             this.zoomOutButton.visible = false;
+            this.scrollBar.visible = false;
         } else {
             this.searchBox.visible = true;
             this.infoToggleButton.visible = true;
             this.zoomInButton.visible = true;
             this.zoomOutButton.visible = true;
+            if(this.getMaxScroll() > 0) this.scrollBar.visible = true;
 
             this.searchBox.setX(this.getSearchBoxX());
             this.infoToggleButton.setX(this.getInfoToggleButtonX());
             this.zoomInButton.setX(this.getZoomInButtonX());
             this.zoomOutButton.setX(this.getZoomOutButtonX());
+            this.scrollBar.setX(this.getScrollBarX());
         }
     }
 
@@ -450,11 +475,36 @@ public class BestiaryScreen extends Screen {
     public void tryZoomOut(){
         this.zoom = Mth.clamp(++this.zoom, MAX_ZOOM, MIN_ZOOM);
         this.scrollAmount = 0F;
+        this.updateScrollBar();
     }
 
     public void tryZoomIn(){
         this.zoom = Mth.clamp(--this.zoom, MAX_ZOOM, MIN_ZOOM);
         this.scrollAmount = 0F;
+        this.updateScrollBar();
+    }
+
+    public float getContentHeight(){
+        int rows = (int)Math.ceil((float)filteredEntries.size() / (float)this.zoom);
+        return ((float)rows * (ENTRY_HEIGHT + PADDING)) / (float)this.zoom;
+    }
+
+    public int getVisibleHeight(){
+        return (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
+    }
+
+    public float getMaxScroll(){
+        return Math.max(0, this.getContentHeight() - this.getVisibleHeight());
+    }
+
+    public void updateScrollBar(){
+        float maxScroll = this.getMaxScroll();
+        if(maxScroll <= 0){
+            this.scrollBar.visible = false;
+            return;
+        }
+        this.scrollBar.setThumbHeight(this.getScrollBarThumbHeight());
+        this.scrollBar.setScrollAmount(this.scrollAmount / this.getMaxScroll());
     }
 
     @Override
@@ -462,12 +512,10 @@ public class BestiaryScreen extends Screen {
         if(!onlySideScreen && mouseInScissor((int)mouseX, (int)mouseY)) {
             this.scrollAmount -= (float) delta * 30F;
 
-            int visibleHeight = (this.height - PADDING - 2 * this.topPos - PANEL_TOP_BLIT_HEIGHT - PANEL_BOTTOM_BLIT_HEIGHT);
-            int rows = (int)Math.ceil((float)filteredEntries.size() / (float)this.zoom);
-            float contentHeight = rows * (ENTRY_HEIGHT + PADDING);
-            float maxScroll = Math.max(0, contentHeight / this.zoom - visibleHeight);
+            float maxScroll = this.getMaxScroll();
 
             this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
+            this.updateScrollBar();
             return true;
         }
 
@@ -482,5 +530,19 @@ public class BestiaryScreen extends Screen {
         if(!onlySideScreen) for(var entry : filteredEntries) if(entry.mouseClicked(mouseX, mouseY, button)) return true;
         if(this.activeSideScreenComponent != null && activeSideScreenComponent.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button){
+        // Trigger mouseReleased for scroll bar, because it is not triggered if I'm hovering, but I need it to.
+        if(this.scrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+        if(this.activeSideScreenComponent != null && this.activeSideScreenComponent.mouseReleased(mouseX, mouseY, button)) return true;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY){
+        if(this.activeSideScreenComponent != null && this.activeSideScreenComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 }

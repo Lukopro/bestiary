@@ -6,6 +6,7 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.screen.BestiaryScreen;
 import net.luko.bestia.screen.BestiaryTooltip;
 import net.luko.bestia.screen.widget.CustomButton;
+import net.luko.bestia.screen.widget.ScrollBarWidget;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,6 +21,7 @@ public abstract class BestiarySideScreenComponent {
     protected int x, y;
     protected int width, height;
     protected CustomButton closeButton;
+    protected ScrollBarWidget scrollBar;
     protected final BestiaryScreen parentScreen;
     protected final int availableWidth;
 
@@ -28,6 +30,8 @@ public abstract class BestiarySideScreenComponent {
     protected static final int TEXTURE_HEIGHT = 294;
 
     protected static final int OUTSIDE_BORDER_SIZE = 3;
+
+    protected static final int BUTTON_SIZE = 12;
 
     public static final int PADDING = 4;
 
@@ -47,11 +51,15 @@ public abstract class BestiarySideScreenComponent {
         this.width = width;
         this.availableWidth = this.width - (2 * PADDING) - (2 * BORDER_SIZE);
 
-        this.closeButton = new CustomButton(this.x + this.width - 12, this.y,
-                12, 12,
-                Component.literal("X"),
-                btn -> this.parentScreen.clearSideScreenComponent()
-        );
+        // Call finalizeLayout() later, in case getNeededHeight() needs inheritor-specific data.
+    }
+
+    public int getScrollBarThumbHeight(){
+        return (int)(((float)this.getVisibleHeight() / this.getNeededHeight()) * this.getScrollBarTrackHeight());
+    }
+
+    public int getScrollBarTrackHeight(){
+        return this.height - BUTTON_SIZE - OUTSIDE_BORDER_SIZE;
     }
 
     public void finalizeLayout(){
@@ -62,8 +70,19 @@ public abstract class BestiarySideScreenComponent {
 
         if(parentScreen.height < (this.height + 2 * y)){
             this.y = (parentScreen.height - this.height) / 2;
-            this.closeButton.setY(this.y);
         }
+
+        this.closeButton = new CustomButton(this.x + this.width - BUTTON_SIZE, this.y,
+                BUTTON_SIZE, BUTTON_SIZE,
+                Component.literal("X"),
+                btn -> this.parentScreen.clearSideScreenComponent()
+        );
+
+        this.scrollBar = new ScrollBarWidget(this.x + this.width - BORDER_SIZE + 1, this.y + BUTTON_SIZE,
+                4, this.getScrollBarTrackHeight(),
+                Component.literal("Scroll"), getScrollBarThumbHeight(),
+                (normalized) -> this.scrollAmount = normalized * getMaxScroll());
+        this.scrollBar.visible = this.getMaxScroll() > 0;
     }
 
     public abstract int getNeededHeight();
@@ -72,7 +91,9 @@ public abstract class BestiarySideScreenComponent {
         this.tooltips.clear();
         blitPanel(guiGraphics);
 
-        closeButton.render(guiGraphics, mouseX, mouseY, 0F);
+        this.closeButton.render(guiGraphics, mouseX, mouseY, 0F);
+        this.scrollBar.visible = this.getMaxScroll() > 0;
+        this.scrollBar.render(guiGraphics, mouseX, mouseY, 0F);
 
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
@@ -113,7 +134,8 @@ public abstract class BestiarySideScreenComponent {
     public void moveX(int x){
         this.x = x;
         // I don't think closeButton is ever null, but I did get an NPE with it once so I guard to be safe.
-        if(this.closeButton != null) this.closeButton.setX(this.x + this.width - 12);
+        if(this.closeButton != null) this.closeButton.setX(this.x + this.width - BUTTON_SIZE);
+        if(this.scrollBar != null) this.scrollBar.setX(this.x + this.width - BORDER_SIZE + 1);
     }
 
     protected void blitPanel(GuiGraphics guiGraphics){
@@ -181,6 +203,8 @@ public abstract class BestiarySideScreenComponent {
 
         if(closeButton.mouseClicked(mouseX, mouseY, button)) return true;
 
+        if(this.scrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+
         return this.handleContentClick(mouseX, mouseY, button);
     }
 
@@ -189,19 +213,43 @@ public abstract class BestiarySideScreenComponent {
                 && mouseY >= this.y + OUTSIDE_BORDER_SIZE && mouseY <= this.y + this.height - OUTSIDE_BORDER_SIZE;
     }
 
-    public void onScroll(){}
+    public int getVisibleHeight(){
+        return this.height - 2 * BORDER_SIZE - 2 * PADDING;
+    }
+
+    public int getMaxScroll(){
+        return Math.max(0, getNeededHeight() - getVisibleHeight());
+    }
+
+    public void updateScrollBar(){
+        float maxScroll = this.getMaxScroll();
+        if(maxScroll <= 0){
+            this.scrollBar.visible = false;
+            return;
+        }
+        this.scrollBar.setThumbHeight(this.getScrollBarThumbHeight());
+        this.scrollBar.setScrollAmount(this.scrollAmount / this.getMaxScroll());
+    }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double delta){
         if(this.containsMouse((int)mouseX, (int)mouseY)){
             this.scrollAmount -= (float) delta * 20F;
 
-            float maxScroll = Math.max(0, getNeededHeight() - (this.height - 2 * BORDER_SIZE - 2 * PADDING));
+            float maxScroll = this.getMaxScroll();
             this.scrollAmount = Mth.clamp(this.scrollAmount, 0, maxScroll);
 
-            this.onScroll();
+            this.updateScrollBar();
 
             return true;
         }
         return false;
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button){
+        return this.scrollBar.mouseReleased(mouseX, mouseY, button);
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY){
+        return this.scrollBar.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 }
