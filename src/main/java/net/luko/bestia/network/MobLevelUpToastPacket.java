@@ -4,14 +4,10 @@ import net.luko.bestia.client.ClientBestiaryData;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.screen.MobLevelUpToast;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;

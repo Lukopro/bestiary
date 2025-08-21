@@ -2,6 +2,7 @@ package net.luko.bestia.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
 import net.luko.bestia.util.ResourceUtil;
@@ -26,26 +27,51 @@ public class MobLevelUpToast implements Toast {
     private static final float LINE_HEIGHT = FONT.lineHeight * LEVEL_UP_SCALE;
 
     private final BestiaryEntryScreenComponent entry;
+    private final float toastScale;
 
     public MobLevelUpToast(ResourceLocation mobId, BestiaryData data){
         this.entry = new BestiaryEntryScreenComponent(mobId, data, null, false);
+        this.toastScale = BestiaClientConfig.LEVEL_UP_TOAST_SCALE.get().floatValue();
     }
 
+    // width() and height() for vanilla access, unscaled/scaled for my access.
     public int width(){
-        return BACKGROUND_TEXTURE_BORDER_SIZE * 2 + PADDING * 2 + BestiaryEntryScreenComponent.ENTRY_WIDTH;
+        return (int)this.scaledWidth();
     }
 
     public int height(){
+        // Minecraft breaks toasts that render beyond 160. This fix is a little hacky, but only applies when the player wants huge toasts.
+        return Math.min((int)this.scaledHeight(), 160);
+    }
+
+    public int unscaledWidth(){
+        return BACKGROUND_TEXTURE_BORDER_SIZE * 2 + PADDING * 2 + BestiaryEntryScreenComponent.ENTRY_WIDTH;
+    }
+
+    public int unscaledHeight(){
         return BACKGROUND_TEXTURE_BORDER_SIZE * 2 + PADDING + TOP_PADDING + (int)LINE_HEIGHT + BestiaryEntryScreenComponent.ENTRY_HEIGHT;
+    }
+
+    public float scaledWidth(){
+        return (float)this.unscaledWidth() * this.toastScale;
+    }
+
+    public float scaledHeight(){
+        return (float)this.unscaledHeight() * this.toastScale;
     }
 
     @Override
     public Visibility render(GuiGraphics guiGraphics, ToastComponent toastComponent, long timeSinceLastVisible) {
-        blitPanel(guiGraphics, 0, 0, width(), height());
-
         PoseStack poseStack = guiGraphics.pose();
+
         poseStack.pushPose();
-        poseStack.translate((float)width() / 2F - ((float)FONT.width(LEVEL_UP_TEXT) / 2F) * LEVEL_UP_SCALE, BACKGROUND_TEXTURE_BORDER_SIZE + TOP_PADDING, 0F);
+        poseStack.scale(this.toastScale, this.toastScale, 1F);
+
+        blitPanel(guiGraphics, 0, 0, unscaledWidth(), unscaledHeight());
+
+        poseStack.pushPose();
+        poseStack.translate(unscaledWidth() / 2F - ((float)FONT.width(LEVEL_UP_TEXT) / 2F) * LEVEL_UP_SCALE,
+                BACKGROUND_TEXTURE_BORDER_SIZE + TOP_PADDING, 0F);
         poseStack.scale(LEVEL_UP_SCALE, LEVEL_UP_SCALE, 1F);
 
         guiGraphics.drawString(FONT, LEVEL_UP_TEXT,0, 0, 0xFFFFFF);
@@ -53,6 +79,8 @@ public class MobLevelUpToast implements Toast {
         poseStack.popPose();
 
         this.entry.render(guiGraphics, BACKGROUND_TEXTURE_BORDER_SIZE + PADDING, (int)(BACKGROUND_TEXTURE_BORDER_SIZE + TOP_PADDING + LINE_HEIGHT));
+
+        poseStack.popPose();
 
         return timeSinceLastVisible >= 5000L ? Visibility.HIDE : Visibility.SHOW;
     }
