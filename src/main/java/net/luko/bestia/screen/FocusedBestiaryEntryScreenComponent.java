@@ -34,6 +34,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected BestiaryData data;
     protected final EntityType<?> entityType;
     protected final Font FONT;
+    protected final int levelsPerPoint;
+
     protected static final ResourceLocation LEVEL_BAR_COMPLETED_TEXTURE =
             ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/level_completed_light.png");
     protected static final ResourceLocation LEVEL_BAR_BACKGROUND_TEXTURE =
@@ -71,6 +73,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
 
         this.FONT = Minecraft.getInstance().font;
+        this.levelsPerPoint = BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
 
         this.initializeBuffs();
         this.finalizeLayout();
@@ -78,7 +81,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     }
 
     public void initializeButtons(){
-        if(this.data.level() >= 10){
+        if(data.level() >= levelsPerPoint){
             for(var buff : this.orderedBuffs.entrySet()){
                 ResourceLocation buffId = buff.getKey().getId();
 
@@ -172,7 +175,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int rightX = x + availableWidth;
         int nextY = y + 4; // magic padding #1
 
-        if(data.level() >= BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get()){
+        if(data.level() >= levelsPerPoint){
             this.clearPointsButton.setX(x + 6);
             this.clearPointsButton.setY(nextY + 6 - (int)this.scrollAmount);
             nextY = drawCenteredComponentWrapped(guiGraphics,
@@ -214,9 +217,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         nextY += 4; // magic padding #5
 
-        int levelsPerPoint = BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
         int lastPointLevel = Mth.floor((float)this.data.level() / (float)levelsPerPoint) * levelsPerPoint;
-        int nextPointLevel = lastPointLevel + levelsPerPoint;
+        int nextPointLevel = lastPointLevel + this.levelsPerPoint;
 
         int lastTenthWidth = FONT.width(String.valueOf(lastPointLevel));
         guiGraphics.drawString(FONT, String.valueOf(lastPointLevel),
