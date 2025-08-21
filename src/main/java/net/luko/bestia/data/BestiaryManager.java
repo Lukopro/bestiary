@@ -8,6 +8,8 @@ import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.network.MobLevelUpToastPacket;
 import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.network.BestiarySyncPacket;
+import net.luko.bestia.util.MobIdUtil;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -97,6 +99,11 @@ public class BestiaryManager {
     }
 
     public void setKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
+        if(!MobIdUtil.validBestiaryMob(mobId)){
+            Bestia.LOGGER.warn("Attempted to modify Bestiary for invalid mob ID: {}", mobId);
+            return;
+        }
+
         BestiaryData newData = BestiaryData.compute(kills, this.spentPoints.getOrDefault(mobId, new HashMap<>()));
         int oldLevel = this.getData(mobId).level();
 
@@ -138,11 +145,15 @@ public class BestiaryManager {
     }
 
     public int getKillCount(ResourceLocation mobId){
-        return this.killCounts.getOrDefault(mobId, 0);
+        return MobIdUtil.validBestiaryMob(mobId)
+                ? this.killCounts.getOrDefault(mobId, 0)
+                : 0;
     }
 
     public BestiaryData getData(ResourceLocation mobId){
-        return this.cachedData.getOrDefault(mobId, BestiaryData.compute(0, new HashMap<>()));
+        return MobIdUtil.validBestiaryMob(mobId)
+                ? this.cachedData.getOrDefault(mobId, BestiaryData.compute(0, new HashMap<>()))
+                : BestiaryData.compute(0, new HashMap<>());
     }
 
     public Map<ResourceLocation, BestiaryData> getAllData(){
@@ -186,7 +197,7 @@ public class BestiaryManager {
     }
 
     public int getSpecialBuffLevel(SpecialBuff<?> buff, ResourceLocation mobId){
-        return BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()
+        return BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get() && MobIdUtil.validBestiaryMob(mobId)
                 ? this.spentPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
                 : 0;
     }

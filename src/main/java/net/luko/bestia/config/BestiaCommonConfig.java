@@ -1,6 +1,10 @@
 package net.luko.bestia.config;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
+
+import java.util.List;
+import java.util.Objects;
 
 public class BestiaCommonConfig {
     public static final ForgeConfigSpec COMMON_CONFIG;
@@ -28,6 +32,11 @@ public class BestiaCommonConfig {
     public static ForgeConfigSpec.BooleanValue MONOTONY_CHECK;
 
     public static ForgeConfigSpec.IntValue AUTOSAVE_INTERVAL;
+    public static ForgeConfigSpec.ConfigValue<List<? extends String>> BLACKLISTED_ENTITIES;
+    public static ForgeConfigSpec.ConfigValue<List<? extends String>> WHITELISTED_ENTITIES;
+
+    public static List<ResourceLocation> PARSED_BLACKLISTED_ENTITIES;
+    public static List<ResourceLocation> PARSED_WHITELISTED_ENTITIES;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -123,8 +132,40 @@ public class BestiaCommonConfig {
                 .comment("How many ticks until the server saves all bestiary data automatically? (default: 12000 = 10 minutes)")
                         .defineInRange("autosaveInterval", 12000, 100, Integer.MAX_VALUE);
 
+        BLACKLISTED_ENTITIES = builder
+                .comment("Any mobs that should be excluded from Bestiary Data storage and display? (default: [])")
+                        .defineList("blacklistedEntities",
+                                List.of(),
+                                obj -> obj instanceof String);
+
+        WHITELISTED_ENTITIES = builder
+                .comment("Any mobs in the MISC category that should be included in Bestiary Data storage and display? (default: [])")
+                .defineList("whitelistedEntities",
+                        List.of(),
+                        obj -> obj instanceof String);
+
         builder.pop();
 
         COMMON_CONFIG = builder.build();
+    }
+
+    public static void initializeCaches(){
+        PARSED_BLACKLISTED_ENTITIES = BLACKLISTED_ENTITIES.get().stream()
+                .map(ResourceLocation::tryParse)
+                .filter(Objects::nonNull)
+                .toList();
+
+        PARSED_WHITELISTED_ENTITIES = WHITELISTED_ENTITIES.get().stream()
+                .map(ResourceLocation::tryParse)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    public static boolean entityIsBlacklisted(ResourceLocation id){
+        return PARSED_BLACKLISTED_ENTITIES.contains(id);
+    }
+
+    public static boolean entityIsWhitelisted(ResourceLocation id){
+        return PARSED_WHITELISTED_ENTITIES.contains(id);
     }
 }

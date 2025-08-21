@@ -11,6 +11,7 @@ import net.luko.bestia.screen.side.BestiaryInfoScreenComponent;
 import net.luko.bestia.screen.side.BestiarySideScreenComponent;
 import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.screen.widget.ScrollBarWidget;
+import net.luko.bestia.util.MobIdUtil;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -306,6 +307,7 @@ public class BestiaryScreen extends Screen {
 
         this.filteredEntries = this.bestiaryEntryScreenComponents.stream()
                 .filter(entry -> entry.getDisplayName().toLowerCase().contains(query))
+                .filter(entry -> MobIdUtil.validBestiaryMob(entry.getMobId()))
                 .sorted(Comparator.comparingInt(BestiaryEntryScreenComponent::kills).reversed())
                 .toList();
     }

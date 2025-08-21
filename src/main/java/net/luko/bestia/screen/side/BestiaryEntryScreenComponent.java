@@ -84,6 +84,10 @@ public class BestiaryEntryScreenComponent {
         this.focused = focused;
     }
 
+    public ResourceLocation getMobId(){
+        return this.mobId;
+    }
+
     public String getDisplayName(){
         return entityType != null ? entityType.getDescription().getString() : mobId.toString();
     }

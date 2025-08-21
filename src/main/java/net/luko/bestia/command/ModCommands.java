@@ -5,8 +5,10 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
+import net.luko.bestia.util.MobIdUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -19,13 +21,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID)
 public class ModCommands {
 
     public static final SuggestionProvider<CommandSourceStack> ENTITY_SUGGESTIONS = (ctx, builder) ->
             SharedSuggestionProvider.suggestResource(
-                    BuiltInRegistries.ENTITY_TYPE.keySet(),
+                    ForgeRegistries.ENTITY_TYPES.getKeys().stream()
+                            .filter(MobIdUtil::validBestiaryMob)
+                            .toList(),
                     builder
             );
 

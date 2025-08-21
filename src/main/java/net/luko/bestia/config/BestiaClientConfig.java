@@ -11,7 +11,7 @@ public class BestiaClientConfig {
 
     public static final ForgeConfigSpec.BooleanValue SHOW_LEVEL_UP_TOASTS;
 
-    static{
+    static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
 
         SHOWN_BEFORE = builder

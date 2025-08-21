@@ -22,8 +22,8 @@ public class Bestia {
     public Bestia(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
 
-        context.registerConfig(ModConfig.Type.COMMON, BestiaCommonConfig.COMMON_CONFIG);
         context.registerConfig(ModConfig.Type.CLIENT, BestiaClientConfig.CLIENT_CONFIG);
+        context.registerConfig(ModConfig.Type.COMMON, BestiaCommonConfig.COMMON_CONFIG);
 
         modEventBus.addListener(this::commonSetup);
 
@@ -32,6 +32,7 @@ public class Bestia {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ModPackets.register();
+        event.enqueueWork(BestiaCommonConfig::initializeCaches);
         event.enqueueWork(SpecialBuffRegistry::init);
         event.enqueueWork(LevelFormula::init);
     }

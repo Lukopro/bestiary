@@ -3,11 +3,9 @@ package net.luko.bestia.data;
 import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.buff.MobBuff;
-import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.util.LevelFormula;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
 import java.util.HashMap;
