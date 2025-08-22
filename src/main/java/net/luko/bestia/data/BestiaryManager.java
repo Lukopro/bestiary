@@ -27,7 +27,7 @@ public class BestiaryManager {
     private final Map<ResourceLocation, Map<ResourceLocation, Integer>> spentPoints = new HashMap<>();
 
     public void loadFromNBT(CompoundTag bestiaryTag){
-        if(bestiaryTag.contains("Entries")){
+        if(bestiaryTag.contains("Entries") || bestiaryTag.isEmpty()){
             loadEntriesNBT(bestiaryTag.getList("Entries", Tag.TAG_COMPOUND));
         } else {
             loadEntriesNBT(convertToNewBestiaryTag(bestiaryTag).getList("Entries", Tag.TAG_COMPOUND));
