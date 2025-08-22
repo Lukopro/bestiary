@@ -49,7 +49,6 @@ public class BestiaryManager {
             BestiaryData newData = BestiaryData.compute(kills, loadedSpentPoints);
             this.cachedData.put(mobId, newData);
             this.spentPoints.put(mobId, newData.spentPoints());
-
         }
     }
 

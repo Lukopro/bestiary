@@ -421,28 +421,35 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     @Override
     public int getNeededHeight() {
         int y = 0;
-        y += BestiaryEntryScreenComponent.ENTRY_HEIGHT * ((float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH);
+        y += BestiaryEntryScreenComponent.ENTRY_HEIGHT * (int)((float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH);
         y += 4; // magic padding #1
         if(data.level() >= 10){
-            y += getComponentWrappedHeight(Component.literal(String.format("%d point%s to spend",
-                            this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
-                    this.availableWidth, 1.0F);
-            y += 4; // magic padding #2
-            for(var entry : this.orderedBuffs.entrySet()){
-                y += Math.max((BUTTON_BLIT_DIMENSIONS + 4),
-                        getComponentWrappedHeight(Component.literal(String.format(
-                                "%s %s", entry.getKey().getDisplayName(), RomanUtil.toRoman(entry.getValue()))),
-                                this.availableWidth, BUFF_TITLE_SCALE));
-                y += 5; // magic padding #3
-                y += getComponentWrappedHeight(Component.literal(entry.getKey().getInfo(entry.getValue())), this.availableWidth, 1.0F);
-            }
-            y += 12; // magic padding #4
+            y += this.getPointsSectionHeight();
         }
 
         y += 4; // magic padding #5
         y += getLevelBarHeight();
 
         return y + 1; // +1 to account for slight rounding error
+    }
+
+    public int getPointsSectionHeight(){
+        int y = 0;
+        y += getComponentWrappedHeight(Component.literal(String.format("%d point%s to spend",
+                        this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
+                this.availableWidth, 1.0F);
+        y += 4; // magic padding #2
+        for(var entry : this.orderedBuffs.entrySet()){
+            y += Math.max((BUTTON_BLIT_DIMENSIONS + 4),
+                    getComponentWrappedHeight(Component.literal(String.format(
+                                    "%s %s", entry.getKey().getDisplayName(), RomanUtil.toRoman(entry.getValue()))),
+                            this.availableWidth, BUFF_TITLE_SCALE));
+            y += 5; // magic padding #3
+            y += getComponentWrappedHeight(Component.literal(entry.getKey().getInfo(entry.getValue())), this.availableWidth, 1.0F);
+        }
+        y += 12; // magic padding #4
+
+        return y;
     }
 
     @Override

@@ -8,33 +8,89 @@ import net.luko.bestia.data.PlayerBestiaryStore;
 import net.luko.bestia.util.MobIdUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.eventlog.EventLogDirectory;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerModEvents {
 
     @SubscribeEvent
+    public static void onServerStart(ServerStartingEvent event){
+        MinecraftServer server = event.getServer();
+
+        BestiaryOfflineCache.clear();
+
+        File playerDataFolder = server.getWorldPath(LevelResource.PLAYER_DATA_DIR).toFile();
+        if(!playerDataFolder.exists() || !playerDataFolder.isDirectory()){
+            Bestia.LOGGER.warn("Player data folder not found: {}", playerDataFolder.getAbsolutePath());
+            return;
+        }
+
+        File[] files = playerDataFolder.listFiles((dir, name) -> name.endsWith(".dat"));
+        if(files == null) {
+            Bestia.LOGGER.warn("Files is null? Strange error");
+            return;
+        }
+        Bestia.LOGGER.debug("Attempting to cache bestiary data from {} playerdata files", files.length);
+
+        for(File file : files){
+            try {
+                CompoundTag playerTag = NbtIo.readCompressed(file);
+                CompoundTag forgeData = playerTag.getCompound("ForgeData");
+
+                if(forgeData.contains("Bestiary")){
+                    CompoundTag bestiaryTag = forgeData.getCompound("Bestiary");
+                    UUID uuid = UUID.fromString(file.getName().replace(".dat", ""));
+                    BestiaryOfflineCache.put(uuid, bestiaryTag);
+                }
+            } catch (IOException | RuntimeException e){
+                Bestia.LOGGER.error("Failed to load bestiary data from {} " +
+                        "(you can probably ignore this if you are in singleplayer)", file.getName(), e);
+            }
+        }
+
+        Bestia.LOGGER.info("Loaded {} offline player bestiary entries", BestiaryOfflineCache.size());
+    }
+
+    @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
         if(!(event.getEntity() instanceof ServerPlayer player)) return;
+        UUID uuid = player.getUUID();
 
-        CompoundTag tag = player.getPersistentData().getCompound("Bestiary");
+        CompoundTag bestiaryTag = BestiaryOfflineCache.get(uuid);
+        if(bestiaryTag != null) {
+            Bestia.LOGGER.debug("Found offline cache for player {}", uuid);
+            BestiaryOfflineCache.remove(uuid);
+        }
+        else {
+            Bestia.LOGGER.debug("Could not find offline cache for player {}, falling back", uuid);
+            bestiaryTag = player.getPersistentData().getCompound("Bestiary");
+        }
+
+
         BestiaryManager manager = new BestiaryManager();
-        manager.loadFromNBT(tag);
+        manager.loadFromNBT(bestiaryTag);
 
         manager.syncToPlayer(player);
 
@@ -50,8 +106,10 @@ public class ServerModEvents {
             Bestia.LOGGER.warn("Bestiary manager for player {} was null", player);
             return;
         }
+
         CompoundTag tag = manager.serializeNBT();
         player.getPersistentData().put("Bestiary", tag);
+        BestiaryOfflineCache.put(player.getUUID(), tag);
 
         PlayerBestiaryStore.remove(player);
     }
