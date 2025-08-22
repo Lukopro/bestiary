@@ -120,9 +120,6 @@ public class BestiaryManager {
     }
 
     public void onSpendPointWithSync(ServerPlayer player, ResourceLocation mobId, ResourceLocation specialBuff){
-        int newPoints = this.spentPoints
-                .computeIfAbsent(mobId, id -> new HashMap<>())
-                .getOrDefault(specialBuff, 0) + 1;
         if(getSpecialBuffLevel(SpecialBuffRegistry.get(specialBuff), mobId) >= SpecialBuffRegistry.get(specialBuff).getMaxLevel()){
             Bestia.LOGGER.warn("Client attempted to spend buff point, but buff is maxed.");
             return;
@@ -131,6 +128,11 @@ public class BestiaryManager {
             Bestia.LOGGER.warn("Client attempted to spend buff point, but no points are available.");
             return;
         }
+
+        int newPoints = this.spentPoints
+                .computeIfAbsent(mobId, id -> new HashMap<>())
+                .getOrDefault(specialBuff, 0) + 1;
+
         this.spentPoints.get(mobId).put(specialBuff, newPoints);
         this.cachedData.put(mobId, BestiaryData.compute(this.killCounts.get(mobId), this.spentPoints.get(mobId)));
         syncToPlayer(player);

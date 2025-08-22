@@ -423,7 +423,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int y = 0;
         y += BestiaryEntryScreenComponent.ENTRY_HEIGHT * (int)((float)this.availableWidth / (float)BestiaryEntryScreenComponent.ENTRY_WIDTH);
         y += 4; // magic padding #1
-        if(data.level() >= 10){
+        if(data.level() >= BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get()){
             y += this.getPointsSectionHeight();
         }
 
