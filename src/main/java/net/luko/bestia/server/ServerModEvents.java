@@ -32,9 +32,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Mod.EventBusSubscriber(modid = Bestia.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerModEvents {
+
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+            "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    );
 
     @SubscribeEvent
     public static void onServerStart(ServerStartingEvent event){
@@ -57,17 +62,23 @@ public class ServerModEvents {
 
         for(File file : files){
             try {
+                String name = file.getName().replace(".dat", "");
+                if(!UUID_PATTERN.matcher(name).matches()){
+                    Bestia.LOGGER.warn("Skipping file {}, invalid UUID formal (likely a backup)", file.getName());
+                    continue;
+                }
+                UUID uuid = UUID.fromString(name);
+
                 CompoundTag playerTag = NbtIo.readCompressed(file);
                 CompoundTag forgeData = playerTag.getCompound("ForgeData");
 
                 if(forgeData.contains(BestiaryKey.ROOT.get())){
                     CompoundTag bestiaryTag = forgeData.getCompound(BestiaryKey.ROOT.get());
-                    UUID uuid = UUID.fromString(file.getName().replace(".dat", ""));
+
                     BestiaryOfflineCache.put(uuid, bestiaryTag);
                 }
             } catch (IOException | RuntimeException e){
-                Bestia.LOGGER.error("Failed to load bestiary data from {} " +
-                        "(you can probably ignore this if you are in singleplayer)", file.getName(), e);
+                Bestia.LOGGER.error("Failed to load bestiary data from {} ", file.getName(), e);
             }
         }
 
