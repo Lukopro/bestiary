@@ -194,7 +194,7 @@ public class BestiaryEntryScreenComponent {
                     iconSize, iconSize);
             this.tooltips.add(new BestiaryTooltip(nextX, nextX + iconSize,
                     y + verticalPadding, y + verticalPadding + iconSize,
-                    List.of(Component.literal(fullDamageText))));
+                    List.of(Component.literal(fullResistanceText))));
             nextX += iconSize + xPadding;
             guiGraphics.drawString(FONT, resistanceText, nextX, y + verticalPadding + 2, 0xFFFFFF);
 

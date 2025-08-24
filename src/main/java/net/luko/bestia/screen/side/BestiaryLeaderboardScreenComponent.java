@@ -26,7 +26,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
 
     protected static final float TEXT_SCALE = 1.5F;
     protected static final float TITLE_SCALE = 3F;
-    protected static final float TITLE_CONTENT_PADDING = 6F;
+    protected static final float TITLE_PADDING = 10F;
 
     protected static final String RANK_FORMAT = "%d. ";
     protected static final String LEVEL_FORMAT = " - Level %d";
@@ -80,7 +80,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     }
 
     public static int getTitleHeight(){
-        return (int)(TITLE_SCALE * (FONT.lineHeight + PADDING));
+        return (int)(TITLE_SCALE * FONT.lineHeight + TITLE_PADDING);
     }
 
     public static int getEntryHeightScaled(){
@@ -89,7 +89,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
 
     @Override
     public int getNeededHeight() {
-        return (int)(getTitleHeight() + TITLE_CONTENT_PADDING + leaderboard.size() * getEntryHeightScaled());
+        return (int)(getTitleHeight() + TITLE_PADDING + leaderboard.size() * getEntryHeightScaled());
     }
 
     @Override
@@ -102,13 +102,13 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     @Override
     public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         PoseStack poseStack = guiGraphics.pose();
-        float nextY = (float)(this.y + BORDER_SIZE + PADDING);
+        float nextY = (float)(this.y + BORDER_SIZE + TITLE_PADDING);
 
         nextY = drawTitle(guiGraphics,
                 this.x + BORDER_SIZE + PADDING,
                 this.x + BORDER_SIZE + PADDING + this.availableWidth,
                 nextY);
-        nextY += TITLE_CONTENT_PADDING;
+        nextY += TITLE_PADDING;
 
         poseStack.pushPose();
         poseStack.scale(TEXT_SCALE, TEXT_SCALE, 1F);
