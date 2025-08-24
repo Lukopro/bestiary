@@ -112,10 +112,11 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             this.clearPointsButton = new CustomButton(0, 0, 72, EXTRA_BUTTONS_HEIGHT,
                     Component.literal("Clear points"),
                     btn -> ModPackets.CHANNEL.sendToServer(new ClearPointsPacket(mobId)));
-            this.leaderboardButton = new CustomButton(0, 0, 72, EXTRA_BUTTONS_HEIGHT,
-                    Component.literal("Leaderboard"),
-                    btn -> ModPackets.CHANNEL.sendToServer(new RequestLeaderboardPacket(this.mobId)));
         }
+
+        this.leaderboardButton = new CustomButton(0, 0, 72, EXTRA_BUTTONS_HEIGHT,
+                Component.literal("Leaderboard"),
+                btn -> ModPackets.CHANNEL.sendToServer(new RequestLeaderboardPacket(this.mobId)));
     }
 
     public void refresh(BestiaryData newData){
@@ -172,8 +173,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             this.tooltips.add(tooltip.scale(headerScale, scrollAmount));
         }
 
-        if(this.leaderboardButton != null) this.leaderboardButton.setX(adjustedX + 6);
-        if(this.leaderboardButton != null) this.leaderboardButton.setY(nextY + 6 - (int)this.scrollAmount);
+        this.leaderboardButton.setX(adjustedX + 6);
+        this.leaderboardButton.setY(nextY + 6 - (int)this.scrollAmount);
         nextY += EXTRA_BUTTONS_HEIGHT + PADDING;
 
         renderPointSection(guiGraphics,
@@ -186,8 +187,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int nextY = y + PADDING;
 
         if(this.data.level() >= this.levelsPerPoint){
-            if(this.clearPointsButton != null) this.clearPointsButton.setX(x + 6);
-            if(this.clearPointsButton != null) this.clearPointsButton.setY(nextY + 6 - (int)this.scrollAmount);
+            this.clearPointsButton.setX(x + 6);
+            this.clearPointsButton.setY(nextY + 6 - (int)this.scrollAmount);
             nextY = drawCenteredComponentWrapped(guiGraphics,
                     Component.literal(String.format("%d point%s to spend", this.data.remainingPoints(), this.data.remainingPoints() == 1 ? "" : "s")),
                     x, rightX, nextY,
@@ -264,10 +265,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
             this.clearPointsButton.render(guiGraphics, mouseX, mouseY, 0F);
         }
 
-        if(this.leaderboardButton != null){
-            this.leaderboardButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
-            this.leaderboardButton.render(guiGraphics, mouseX, mouseY, 0F);
-        }
+        this.leaderboardButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
+        this.leaderboardButton.render(guiGraphics, mouseX, mouseY, 0F);
 
         for(var entry : this.specialBuffButtons.entrySet()){
             Component tooltip = null;
