@@ -9,6 +9,7 @@ import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.screen.widget.ScrollBarWidget;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -19,7 +20,9 @@ import java.util.Set;
 
 public abstract class BestiarySideScreenComponent {
     protected int x, y;
-    protected int width, height;
+    protected final int width;
+    protected int height;
+
     protected CustomButton closeButton;
     protected ScrollBarWidget scrollBar;
     protected final BestiaryScreen parentScreen;
@@ -34,6 +37,8 @@ public abstract class BestiarySideScreenComponent {
     protected static final int BUTTON_SIZE = 12;
 
     public static final int PADDING = 4;
+
+    protected static final Font FONT = Minecraft.getInstance().font;
 
     protected float scrollAmount = 0F;
 

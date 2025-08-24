@@ -38,5 +38,15 @@ public class ModPackets {
                 MobLevelUpToastPacket::encode,
                 MobLevelUpToastPacket::decode,
                 MobLevelUpToastPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, RequestLeaderboardPacket.class,
+                RequestLeaderboardPacket::encode,
+                RequestLeaderboardPacket::decode,
+                RequestLeaderboardPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, LeaderboardPacket.class,
+                LeaderboardPacket::encode,
+                LeaderboardPacket::decode,
+                LeaderboardPacket::handle);
     }
 }

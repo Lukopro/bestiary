@@ -2,6 +2,7 @@ package net.luko.bestia.data;
 
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +16,10 @@ public class PlayerBestiaryStore {
 
     public static BestiaryManager get(ServerPlayer player){
         return STORE.get(player.getUUID());
+    }
+
+    public static Map<UUID, BestiaryManager> getAll(){
+        return Collections.unmodifiableMap(STORE);
     }
 
     public static void remove(ServerPlayer player){

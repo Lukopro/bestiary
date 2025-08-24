@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class BestiaryOfflineCache {
-    private static Map<UUID, CompoundTag> CACHED = new HashMap<>();
+    private static final Map<UUID, CompoundTag> CACHED = new HashMap<>();
 
     public static void put(UUID uuid, CompoundTag bestiaryTag){
         CACHED.put(uuid, bestiaryTag);

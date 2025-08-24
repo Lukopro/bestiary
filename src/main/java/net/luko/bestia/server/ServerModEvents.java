@@ -2,6 +2,7 @@ package net.luko.bestia.server;
 
 import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaCommonConfig;
+import net.luko.bestia.data.BestiaryKey;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.data.PlayerBestiaryStore;
@@ -59,8 +60,8 @@ public class ServerModEvents {
                 CompoundTag playerTag = NbtIo.readCompressed(file);
                 CompoundTag forgeData = playerTag.getCompound("ForgeData");
 
-                if(forgeData.contains("Bestiary")){
-                    CompoundTag bestiaryTag = forgeData.getCompound("Bestiary");
+                if(forgeData.contains(BestiaryKey.ROOT.get())){
+                    CompoundTag bestiaryTag = forgeData.getCompound(BestiaryKey.ROOT.get());
                     UUID uuid = UUID.fromString(file.getName().replace(".dat", ""));
                     BestiaryOfflineCache.put(uuid, bestiaryTag);
                 }
@@ -85,12 +86,12 @@ public class ServerModEvents {
         }
         else {
             Bestia.LOGGER.debug("Could not find offline cache for player {}, falling back", uuid);
-            bestiaryTag = player.getPersistentData().getCompound("Bestiary");
+            bestiaryTag = player.getPersistentData().getCompound(BestiaryKey.ROOT.get());
         }
 
 
         BestiaryManager manager = new BestiaryManager();
-        manager.loadFromNBT(bestiaryTag);
+        manager.loadFromNBT(bestiaryTag, event.getEntity().getName().getString());
 
         manager.syncToPlayer(player);
 
@@ -108,7 +109,7 @@ public class ServerModEvents {
         }
 
         CompoundTag tag = manager.serializeNBT();
-        player.getPersistentData().put("Bestiary", tag);
+        player.getPersistentData().put(BestiaryKey.ROOT.get(), tag);
         BestiaryOfflineCache.put(player.getUUID(), tag);
 
         PlayerBestiaryStore.remove(player);
@@ -136,7 +137,7 @@ public class ServerModEvents {
             BestiaryManager manager = PlayerBestiaryStore.get(player);
             if(manager != null){
                 CompoundTag tag = manager.serializeNBT();
-                player.getPersistentData().put("Bestiary", tag);
+                player.getPersistentData().put(BestiaryKey.ROOT.get(), tag);
             }
         }
 
@@ -159,7 +160,7 @@ public class ServerModEvents {
         manager.onKillWithSync(player, mobId);
 
         // Later on, do this less often
-        player.getPersistentData().put("Bestiary", manager.serializeNBT());
+        player.getPersistentData().put(BestiaryKey.ROOT.get(), manager.serializeNBT());
     }
 
     @SubscribeEvent

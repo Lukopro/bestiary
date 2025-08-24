@@ -6,9 +6,8 @@ import net.luko.bestia.Bestia;
 import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
-import net.luko.bestia.screen.side.BestiaryEntryScreenComponent;
-import net.luko.bestia.screen.side.BestiaryInfoScreenComponent;
-import net.luko.bestia.screen.side.BestiarySideScreenComponent;
+import net.luko.bestia.data.leaderboard.LeaderboardEntry;
+import net.luko.bestia.screen.side.*;
 import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.screen.widget.ScrollBarWidget;
 import net.luko.bestia.util.MobIdUtil;
@@ -194,8 +193,8 @@ public class BestiaryScreen extends Screen {
         int maxWidth = 200;
         this.sideScreenWidth = this.getSideScreenComponentWidth(maxWidth, true);
 
-        int maxWidthToRemoveMainPanel = 40;
-        if(this.sideScreenWidth < maxWidthToRemoveMainPanel){
+        int minWidthToRemoveMainPanel = 40;
+        if(this.sideScreenWidth < minWidthToRemoveMainPanel){
             this.sideScreenWidth = this.getSideScreenComponentWidth(maxWidth, false);
             this.onlySideScreen = true;
         }
@@ -217,8 +216,8 @@ public class BestiaryScreen extends Screen {
         int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
         this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);
 
-        int maxWidthToRemoveMainPanel = BestiaryEntryScreenComponent.ENTRY_WIDTH;
-        if(this.sideScreenWidth < maxWidthToRemoveMainPanel){
+        int minWidthToRemoveMainPanel = BestiaryEntryScreenComponent.ENTRY_WIDTH;
+        if(this.sideScreenWidth < minWidthToRemoveMainPanel){
             this.sideScreenWidth = this.getSideScreenComponentWidth(max, false);
             this.onlySideScreen = true;
         }
@@ -231,6 +230,29 @@ public class BestiaryScreen extends Screen {
                 this.sideScreenWidth,
                 this,
                 mobId, data
+        );
+        this.updateLeftPosMoveTo();
+    }
+
+    public void openLeaderboardScreenComponent(ResourceLocation mobId, List<LeaderboardEntry> leaderboard){
+        this.clearSideScreenComponent();
+        int max = 360;
+        this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);
+
+        int minWidthToRemoveMainPanel = BestiaryLeaderboardScreenComponent.getNeededWidth();
+        if(this.sideScreenWidth < minWidthToRemoveMainPanel){
+            this.sideScreenWidth = this.getSideScreenComponentWidth(max, false);
+            this.onlySideScreen = true;
+        }
+
+        int mainPanelWidthAdjustment = this.onlySideScreen ? 0 : PANEL_BLIT_WIDTH;
+
+        this.activeSideScreenComponent = new BestiaryLeaderboardScreenComponent(
+                this.leftPos + mainPanelWidthAdjustment + MARGIN,
+                this.topPos + PANEL_TOP_BLIT_HEIGHT - 6,
+                this.sideScreenWidth,
+                this,
+                mobId, leaderboard
         );
         this.updateLeftPosMoveTo();
     }

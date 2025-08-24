@@ -4,7 +4,7 @@ import net.luko.bestia.client.ClientBestiaryData;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.BestiaryDataSerializer;
 import net.luko.bestia.screen.BestiaryScreen;
-import net.luko.bestia.screen.FocusedBestiaryEntryScreenComponent;
+import net.luko.bestia.screen.side.FocusedBestiaryEntryScreenComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;

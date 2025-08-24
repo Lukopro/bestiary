@@ -25,26 +25,28 @@ public class BestiaryManager {
     private final Map<ResourceLocation, Integer> killCounts = new HashMap<>();
     private final Map<ResourceLocation, BestiaryData> cachedData = new HashMap<>();
     private final Map<ResourceLocation, Map<ResourceLocation, Integer>> spentPoints = new HashMap<>();
+    private String playerName;
 
-    public void loadFromNBT(CompoundTag bestiaryTag){
-        if(bestiaryTag.contains("Entries") || bestiaryTag.isEmpty()){
-            loadEntriesNBT(bestiaryTag.getList("Entries", Tag.TAG_COMPOUND));
+    public void loadFromNBT(CompoundTag bestiaryTag, String playerName){
+        if(bestiaryTag.contains(BestiaryKey.VERSION.get()) || bestiaryTag.isEmpty()){
+            loadEntriesNBT(bestiaryTag.getList(BestiaryKey.ENTRIES.get(), Tag.TAG_COMPOUND));
         } else {
-            loadEntriesNBT(convertToNewBestiaryTag(bestiaryTag).getList("Entries", Tag.TAG_COMPOUND));
+            loadEntriesNBT(convertFromVersion1To2(bestiaryTag).getList(BestiaryKey.ENTRIES.get(), Tag.TAG_COMPOUND));
         }
+        this.playerName = playerName;
     }
 
     private void loadEntriesNBT(ListTag entriesTag){
         for(Tag t : entriesTag){
             CompoundTag tag = (CompoundTag) t;
-            ResourceLocation mobId = ResourceLocation.tryParse(tag.getString("id"));
+            ResourceLocation mobId = ResourceLocation.tryParse(tag.getString(BestiaryKey.Entry.ID.get()));
             if(mobId == null) {
                 Bestia.LOGGER.warn("{} was not parsed correctly. Data for this mob will not persist.",
-                        tag.getString("id"));
+                        tag.getString(BestiaryKey.Entry.ID.get()));
                 continue;
             }
-            int kills = tag.getInt("kills");
-            Map<ResourceLocation, Integer> loadedSpentPoints = loadSpecialBuffs(tag.getCompound("spent_points"));
+            int kills = tag.getInt(BestiaryKey.Entry.KILLS.get());
+            Map<ResourceLocation, Integer> loadedSpentPoints = loadSpecialBuffs(tag.getCompound(BestiaryKey.Entry.SPENT_POINTS.get()));
             this.killCounts.put(mobId, kills);
             BestiaryData newData = BestiaryData.compute(kills, loadedSpentPoints);
             this.cachedData.put(mobId, newData);
@@ -62,7 +64,7 @@ public class BestiaryManager {
         return buffs;
     }
 
-    private CompoundTag convertToNewBestiaryTag(CompoundTag oldTag){
+    private CompoundTag convertFromVersion1To2(CompoundTag oldTag){
         Bestia.LOGGER.info("Converting old bestiary tag...");
         Bestia.LOGGER.debug("Old tag: {}", oldTag);
 
@@ -71,13 +73,13 @@ public class BestiaryManager {
         for(String key : oldTag.getAllKeys()){
             int kills = oldTag.getInt(key);
             CompoundTag entryTag = new CompoundTag();
-            entryTag.putString("id", key);
-            entryTag.putInt("kills", kills);
-            entryTag.put("spent_points", new CompoundTag());
+            entryTag.putString(BestiaryKey.Entry.ID.get(), key);
+            entryTag.putInt(BestiaryKey.Entry.KILLS.get(), kills);
+            entryTag.put(BestiaryKey.Entry.SPENT_POINTS.get(), new CompoundTag());
             entries.add(entryTag);
         }
-        newTag.put("Entries", entries);
-        newTag.putInt("Version", 2);
+        newTag.put(BestiaryKey.ENTRIES.get(), entries);
+        newTag.putInt(BestiaryKey.VERSION.get(), 2);
 
         Bestia.LOGGER.debug("New tag: {}", newTag);
         return newTag;
@@ -167,19 +169,20 @@ public class BestiaryManager {
         for(var entry : this.cachedData.entrySet()){
             CompoundTag entryTag = new CompoundTag();
 
-            entryTag.putString("id", entry.getKey().toString());
-            entryTag.putInt("kills", entry.getValue().kills());
+            entryTag.putString(BestiaryKey.Entry.ID.get(), entry.getKey().toString());
+            entryTag.putInt(BestiaryKey.Entry.KILLS.get(), entry.getValue().kills());
             CompoundTag spentPointsTag = new CompoundTag();
             for(var buff : entry.getValue().spentPoints().entrySet()){
                 spentPointsTag.putInt(buff.getKey().toString(), buff.getValue());
             }
-            entryTag.put("spent_points", spentPointsTag);
+            entryTag.put(BestiaryKey.Entry.SPENT_POINTS.get(), spentPointsTag);
 
             entries.add(entryTag);
         }
 
-        tag.put("Entries", entries);
-        tag.putInt("Version", 2);
+        tag.putString(BestiaryKey.PLAYER_NAME.get(), this.playerName);
+        tag.put(BestiaryKey.ENTRIES.get(), entries);
+        tag.putInt(BestiaryKey.VERSION.get(), 3);
         return tag;
     }
 
@@ -205,5 +208,9 @@ public class BestiaryManager {
 
     public <T> T getSpecialBuffValue(SpecialBuff<T> buff, ResourceLocation mobId){
         return buff.computeValue(getSpecialBuffLevel(buff, mobId));
+    }
+
+    public String getPlayerName() {
+        return this.playerName;
     }
 }

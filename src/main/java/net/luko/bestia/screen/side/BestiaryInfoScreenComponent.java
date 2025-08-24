@@ -31,14 +31,13 @@ public class BestiaryInfoScreenComponent extends BestiarySideScreenComponent{
 
     @Override
     public int getNeededHeight() {
-        return getWrappedLines().size() * (Minecraft.getInstance().font.lineHeight + TEXT_LINE_SPACING) - TEXT_LINE_SPACING;
+        return getWrappedLines().size() * (FONT.lineHeight + TEXT_LINE_SPACING) - TEXT_LINE_SPACING;
     }
 
     public List<FormattedCharSequence> getWrappedLines(){
-        Font font = Minecraft.getInstance().font;
         List<FormattedCharSequence> wrappedLines = new ArrayList<>();
         for(Component line : INFO_TEXT){
-            List<FormattedCharSequence> wrap = font.split(
+            List<FormattedCharSequence> wrap = FONT.split(
                     line, this.availableWidth);
             wrappedLines.addAll(wrap);
         }
@@ -53,14 +52,13 @@ public class BestiaryInfoScreenComponent extends BestiarySideScreenComponent{
     }
 
     private void drawText(GuiGraphics guiGraphics, int x, int y) {
-        Font font = Minecraft.getInstance().font;
         int color = 0xFFFFFF;
 
         for (int i = 0; i < this.wrappedLines.size(); i++) {
-            int lineY = y + i * (font.lineHeight + TEXT_LINE_SPACING);
+            int lineY = y + i * (FONT.lineHeight + TEXT_LINE_SPACING);
             FormattedCharSequence line = this.wrappedLines.get(i);
 
-            guiGraphics.drawString(font, line, x, lineY, color);
+            guiGraphics.drawString(FONT, line, x, lineY, color);
         }
     }
 }
