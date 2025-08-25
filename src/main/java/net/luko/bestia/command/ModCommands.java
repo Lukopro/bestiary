@@ -107,6 +107,11 @@ public class ModCommands {
     }
 
     private static int setBestiaryLevel(CommandSourceStack source, ServerPlayer player, ResourceLocation mobId, int value){
+        if(value > BestiaCommonConfig.MAX_LEVEL.get()){
+            source.sendFailure(Component.literal("Level cannot exceed max level!"));
+            return 0;
+        }
+
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null){
             source.sendFailure(Component.literal("Could not get bestiary data for player."));
@@ -137,9 +142,20 @@ public class ModCommands {
     }
 
     private static int addBestiaryLevels(CommandSourceStack source, ServerPlayer player, ResourceLocation mobId, int value){
+        if(value > BestiaCommonConfig.MAX_LEVEL.get()){
+            source.sendFailure(Component.literal("Level cannot exceed max level!"));
+            return 0;
+        }
+
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null){
             source.sendFailure(Component.literal("Could not get bestiary data for player."));
+            return 0;
+        }
+
+        int current = manager.getData(mobId) == null ? 0 : manager.getData(mobId).level();
+        if(current + value > BestiaCommonConfig.MAX_LEVEL.get()){
+            source.sendFailure(Component.literal("Level cannot exceed max level!"));
             return 0;
         }
 

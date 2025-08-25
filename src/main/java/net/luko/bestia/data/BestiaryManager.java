@@ -90,12 +90,21 @@ public class BestiaryManager {
     }
 
     public void setLevelAndSync(ServerPlayer player, ResourceLocation mobId, int level){
+        if(level > BestiaCommonConfig.MAX_LEVEL.get()){
+            Bestia.LOGGER.warn("Attempted to set bestiary level above max");
+            return;
+        }
         int newKills = BestiaryData.totalNeededForLevel(level);
         this.setKillsAndSync(player, mobId, newKills);
     }
 
     public void addLevelsAndSync(ServerPlayer player, ResourceLocation mobId, int levels){
-        int newKills = BestiaryData.totalNeededForLevel(cachedData.get(mobId).level() + levels);
+        int oldLevel = cachedData.get(mobId) == null ? 0 : cachedData.get(mobId).level();
+        if(oldLevel + levels > BestiaCommonConfig.MAX_LEVEL.get()){
+            Bestia.LOGGER.warn("Attempted to adjust bestiary level above max");
+            return;
+        }
+        int newKills = BestiaryData.totalNeededForLevel(oldLevel + levels);
         this.setKillsAndSync(player, mobId, newKills);
     }
 
