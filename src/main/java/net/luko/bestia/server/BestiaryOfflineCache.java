@@ -2,10 +2,7 @@ package net.luko.bestia.server;
 
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class BestiaryOfflineCache {
     private static final Map<UUID, CompoundTag> CACHED = new HashMap<>();
