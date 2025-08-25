@@ -22,7 +22,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     protected final ResourceLocation mobId;
     protected final List<LeaderboardEntry> leaderboard;
     protected final List<LeaderboardEntryDisplay> leaderboardDisplay;
-    protected final CustomButton backButton;
+    protected CustomButton backButton;
 
     protected static final float TEXT_SCALE = 1.5F;
     protected static final float TITLE_SCALE = 3F;
@@ -37,10 +37,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
         this.mobId = mobId;
         this.leaderboard = this.sortLeaderboard(leaderboard);
         this.leaderboardDisplay = this.cacheDisplay();
-        this.backButton = new CustomButton(
-            this.x, this.y, BUTTON_SIZE, BUTTON_SIZE, Component.literal("<"),
-                btn -> this.parentScreen.openFocusedEntryScreenComponent(mobId, ClientBestiaryData.getFor(mobId))
-        );
+
         this.finalizeLayout();
     }
 
@@ -93,6 +90,15 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     }
 
     @Override
+    public void finalizeLayout(){
+        super.finalizeLayout();
+        this.backButton = new CustomButton(
+                this.x, this.y, BUTTON_SIZE, BUTTON_SIZE, Component.literal("<"),
+                btn -> this.parentScreen.openFocusedEntryScreenComponent(mobId, ClientBestiaryData.getFor(mobId))
+        );
+    }
+
+    @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY){
         super.render(guiGraphics, mouseX, mouseY);
 
@@ -102,7 +108,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     @Override
     public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         PoseStack poseStack = guiGraphics.pose();
-        float nextY = (float)(this.y + BORDER_SIZE + TITLE_PADDING);
+        float nextY = this.y + BORDER_SIZE + TITLE_PADDING;
 
         nextY = drawTitle(guiGraphics,
                 this.x + BORDER_SIZE + PADDING,
