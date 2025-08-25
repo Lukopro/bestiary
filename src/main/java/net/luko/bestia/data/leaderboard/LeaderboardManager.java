@@ -2,6 +2,7 @@ package net.luko.bestia.data.leaderboard;
 
 import com.mojang.authlib.GameProfile;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryKey;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.PlayerBestiaryStore;
@@ -34,6 +35,7 @@ public class LeaderboardManager {
         for(BestiaryManager manager : PlayerBestiaryStore.getAll().values()){
             String name = manager.getPlayerName();
             int level = manager.getData(mobId).level();
+            if(level < BestiaCommonConfig.MIN_LEADERBOARD_LEVEL.get()) continue;
 
             leaderboard.add(new LeaderboardEntry(name, level));
         }
@@ -44,15 +46,17 @@ public class LeaderboardManager {
         for(var entry : offlineTags.entrySet()){
             UUID uuid = entry.getKey();
             CompoundTag tag = entry.getValue();
+
+            BestiaryManager tempManager = new BestiaryManager();
+            tempManager.loadFromNBT(tag, null); // No name needed for tempManager
+            int level = tempManager.getData(mobId).level();
+            if(level < BestiaCommonConfig.MIN_LEADERBOARD_LEVEL.get()) continue;
+
             String name;
 
             if(tag.contains(BestiaryKey.PLAYER_NAME.get())){
                 name = tag.getString(BestiaryKey.PLAYER_NAME.get());
             } else name = getNameWithoutTag(uuid, server);
-
-            BestiaryManager tempManager = new BestiaryManager();
-            tempManager.loadFromNBT(tag, name);
-            int level = tempManager.getData(mobId).level();
 
             leaderboard.add(new LeaderboardEntry(name, level));
         }

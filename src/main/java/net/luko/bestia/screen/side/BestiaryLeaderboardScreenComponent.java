@@ -31,6 +31,10 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     protected static final String RANK_FORMAT = "%d. ";
     protected static final String LEVEL_FORMAT = " - Level %d";
 
+    protected static final String NO_ENTRIES = "Leaderboard is empty!";
+    protected static final String NO_MINIMUM = "No minimum level.";
+    protected static final String MINIMUM = "Level %d needed to qualify!";
+
     public BestiaryLeaderboardScreenComponent(int x, int y, int width, BestiaryScreen parentScreen, ResourceLocation mobId, List<LeaderboardEntry> leaderboard) {
         super(x, y, width, parentScreen);
 
@@ -86,7 +90,12 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
 
     @Override
     public int getNeededHeight() {
-        return (int)(getTitleHeight() + TITLE_PADDING + leaderboard.size() * getEntryHeightScaled());
+        // getEntryHeightScaled() is used for leaderboard entry lines, no-entries note, and footnote, as they use the same scale
+        return (int)(getTitleHeight()
+                + (leaderboard.isEmpty()
+                    ? getEntryHeightScaled() + 2 * PADDING
+                    : TITLE_PADDING + leaderboard.size() * getEntryHeightScaled()))
+                + getEntryHeightScaled();
     }
 
     @Override
@@ -96,6 +105,12 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
                 this.x, this.y, BUTTON_SIZE, BUTTON_SIZE, Component.literal("<"),
                 btn -> this.parentScreen.openFocusedEntryScreenComponent(mobId, ClientBestiaryData.getFor(mobId))
         );
+    }
+
+    @Override
+    public void moveX(int x){
+        super.moveX(x);
+        this.backButton.setX(x);
     }
 
     @Override
@@ -109,30 +124,32 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
     public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         PoseStack poseStack = guiGraphics.pose();
         float nextY = this.y + BORDER_SIZE + TITLE_PADDING;
+        float minX = this.x + BORDER_SIZE + PADDING;
+        float maxX = this.x + BORDER_SIZE + PADDING + this.availableWidth;
 
-        nextY = drawTitle(guiGraphics,
-                this.x + BORDER_SIZE + PADDING,
-                this.x + BORDER_SIZE + PADDING + this.availableWidth,
-                nextY);
+        nextY = this.drawTitle(guiGraphics, minX, maxX, nextY);
         nextY += TITLE_PADDING;
 
-        poseStack.pushPose();
-        poseStack.scale(TEXT_SCALE, TEXT_SCALE, 1F);
 
-        for(LeaderboardEntryDisplay display : this.leaderboardDisplay){
+
+        if(this.leaderboard.isEmpty()){
+            nextY = this.drawNoEntriesText(guiGraphics, minX, maxX, nextY);
+        } else {
             poseStack.pushPose();
-            poseStack.translate(scaled((float)(this.x + BORDER_SIZE + PADDING), TEXT_SCALE), scaled(nextY, TEXT_SCALE), 0F);
-            nextY += display.render(guiGraphics, 0, 0, this.availableWidth);
+            poseStack.scale(TEXT_SCALE, TEXT_SCALE, 1F);
+
+            for (LeaderboardEntryDisplay display : this.leaderboardDisplay) {
+                poseStack.pushPose();
+                poseStack.translate(scaled(minX, TEXT_SCALE), scaled(nextY, TEXT_SCALE), 0F);
+                nextY += display.render(guiGraphics, 0, 0, this.availableWidth);
+                poseStack.popPose();
+            }
+
             poseStack.popPose();
         }
 
-        poseStack.popPose();
-    }
-
-    @Override
-    public void moveX(int x){
-        super.moveX(x);
-        this.backButton.setX(x);
+        nextY += PADDING;
+        nextY = this.drawFootnote(guiGraphics, minX, maxX, nextY);
     }
 
     private float drawTitle(GuiGraphics guiGraphics, float minX, float maxX, float y) {
@@ -160,8 +177,48 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
         return nextY;
     }
 
-    private int scaled(int coordinate, float scale){
-        return (int)((float)coordinate / scale);
+    private float drawNoEntriesText(GuiGraphics guiGraphics, float minX, float maxX, float y){
+        float nextY = y;
+
+        PoseStack poseStack = guiGraphics.pose();
+
+        poseStack.pushPose();
+        poseStack.scale(TEXT_SCALE, TEXT_SCALE, 1F);
+
+        float textWidth = FONT.width(NO_ENTRIES) * TEXT_SCALE;
+        float textX = minX + (maxX - minX) / 2F - (textWidth / 2F);
+
+        poseStack.translate(scaled(textX, TEXT_SCALE), scaled(nextY, TEXT_SCALE), 0F);
+
+        guiGraphics.drawString(FONT, NO_ENTRIES, 0, 0, 0xFFFFFF);
+        nextY += TEXT_SCALE * FONT.lineHeight + PADDING;
+
+        poseStack.popPose();
+
+        return nextY;
+    }
+
+    private float drawFootnote(GuiGraphics guiGraphics, float minX, float maxX, float y){
+        float nextY = y;
+        int minLevel = BestiaCommonConfig.MIN_LEADERBOARD_LEVEL.get();
+        String footnote = minLevel == 0 ? NO_MINIMUM : String.format(MINIMUM, minLevel);
+
+        PoseStack poseStack = guiGraphics.pose();
+
+        poseStack.pushPose();
+        poseStack.scale(TEXT_SCALE, TEXT_SCALE, 1F);
+
+        float textWidth = FONT.width(footnote) * TEXT_SCALE;
+        float textX = minX + (maxX - minX) / 2F - (textWidth / 2F);
+
+        poseStack.translate(scaled(textX, TEXT_SCALE), scaled(nextY, TEXT_SCALE), 0F);
+
+        guiGraphics.drawString(FONT, footnote, 0, 0, 0xAAAAAA);
+        nextY += TEXT_SCALE * FONT.lineHeight;
+
+        poseStack.popPose();
+
+        return nextY;
     }
 
     private float scaled(float coordinate, float scale){

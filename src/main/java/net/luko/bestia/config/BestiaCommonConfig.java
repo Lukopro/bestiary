@@ -30,6 +30,7 @@ public class BestiaCommonConfig {
     public static ForgeConfigSpec.IntValue MAX_LEVEL;
     public static ForgeConfigSpec.ConfigValue<String> KILLS_FORMULA;
     public static ForgeConfigSpec.BooleanValue MONOTONY_CHECK;
+    public static ForgeConfigSpec.IntValue MIN_LEADERBOARD_LEVEL;
 
     public static ForgeConfigSpec.IntValue AUTOSAVE_INTERVAL;
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> BLACKLISTED_ENTITIES;
@@ -123,6 +124,10 @@ public class BestiaCommonConfig {
                 .comment("Use this if you don't know if the killsFormula is strictly increasing.")
                 .comment("This is laggy! Don't leave this on. (default: false)")
                 .define("monotonyCheck", false);
+
+        MIN_LEADERBOARD_LEVEL = builder
+                .comment("Players with a mob level lower than this are omitted on the leaderboard. (Default: 1)")
+                .defineInRange("minLeaderboardLevel", 1, 0, Integer.MAX_VALUE);
 
         builder.pop();
 
