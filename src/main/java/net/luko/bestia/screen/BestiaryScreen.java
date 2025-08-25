@@ -553,7 +553,9 @@ public class BestiaryScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button){
         // Trigger mouseReleased for scroll bar, because it is not triggered if I'm hovering, but I need it to.
         if(this.scrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+
         if(this.activeSideScreenComponent != null && this.activeSideScreenComponent.mouseReleased(mouseX, mouseY, button)) return true;
+
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
