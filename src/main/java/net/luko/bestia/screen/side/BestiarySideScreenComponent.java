@@ -203,16 +203,6 @@ public abstract class BestiarySideScreenComponent {
         return false;
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int button){
-        if(!containsMouse((int)mouseX, (int)mouseY)) return false;
-
-        if(closeButton.mouseClicked(mouseX, mouseY, button)) return true;
-
-        if(this.scrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-
-        return this.handleContentClick(mouseX, mouseY, button);
-    }
-
     public boolean containsMouse(int mouseX, int mouseY){
         return mouseX >= this.x + OUTSIDE_BORDER_SIZE && mouseX <= this.x + this.width - OUTSIDE_BORDER_SIZE
                 && mouseY >= this.y + OUTSIDE_BORDER_SIZE && mouseY <= this.y + this.height - OUTSIDE_BORDER_SIZE;
@@ -234,6 +224,16 @@ public abstract class BestiarySideScreenComponent {
         }
         this.scrollBar.setThumbHeight(this.getScrollBarThumbHeight());
         this.scrollBar.setScrollAmount(this.scrollAmount / this.getMaxScroll());
+    }
+
+    public boolean mouseClicked(double mouseX, double mouseY, int button){
+        if(!containsMouse((int)mouseX, (int)mouseY)) return false;
+
+        if(closeButton.mouseClicked(mouseX, mouseY, button)) return true;
+
+        if(this.scrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+
+        return this.handleContentClick(mouseX, mouseY, button);
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double delta){

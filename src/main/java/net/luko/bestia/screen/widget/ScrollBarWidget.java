@@ -1,6 +1,5 @@
 package net.luko.bestia.screen.widget;
 
-import net.luko.bestia.Bestia;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;

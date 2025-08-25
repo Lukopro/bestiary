@@ -20,6 +20,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraftforge.fml.LogicalSide;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -330,7 +331,7 @@ public class BestiaryScreen extends Screen {
 
         this.filteredEntries = this.bestiaryEntryScreenComponents.stream()
                 .filter(entry -> entry.getDisplayName().toLowerCase().contains(query))
-                .filter(entry -> MobIdUtil.validBestiaryMob(entry.getMobId()))
+                .filter(entry -> MobIdUtil.validBestiaryMob(entry.getMobId(), LogicalSide.CLIENT))
                 .sorted(Comparator.comparingInt(BestiaryEntryScreenComponent::kills).reversed())
                 .toList();
     }
@@ -536,8 +537,8 @@ public class BestiaryScreen extends Screen {
             return true;
         }
 
-        if(this.activeSideScreenComponent instanceof FocusedBestiaryEntryScreenComponent entryScreen
-                && entryScreen.mouseScrolled(mouseX, mouseY, delta)) return true;
+        if(this.activeSideScreenComponent != null &&
+                this.activeSideScreenComponent.mouseScrolled(mouseX, mouseY, delta)) return true;
 
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
@@ -551,10 +552,9 @@ public class BestiaryScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button){
-        // Trigger mouseReleased for scroll bar, because it is not triggered if I'm hovering, but I need it to.
-        if(this.scrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+        this.scrollBar.mouseReleased(mouseX, mouseY, button);
 
-        if(this.activeSideScreenComponent != null && this.activeSideScreenComponent.mouseReleased(mouseX, mouseY, button)) return true;
+        if(this.activeSideScreenComponent != null) this.activeSideScreenComponent.mouseReleased(mouseX, mouseY, button);
 
         return super.mouseReleased(mouseX, mouseY, button);
     }
