@@ -51,7 +51,7 @@ public class LeaderboardManager {
             } else name = getNameWithoutTag(uuid, server);
 
             BestiaryManager tempManager = new BestiaryManager();
-            tempManager.loadFromNBT(tag.getCompound(BestiaryKey.ROOT.get()), null);
+            tempManager.loadFromNBT(tag, name);
             int level = tempManager.getData(mobId).level();
 
             leaderboard.add(new LeaderboardEntry(name, level));
