@@ -3,6 +3,7 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.client.ModKeybinds;
 import net.luko.bestia.config.BestiaClientConfig;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
@@ -335,14 +336,6 @@ public class BestiaryScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers){
-        if(this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)){
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
     public boolean charTyped(char codePoint, int modifiers){
         if(this.searchBox != null && this.searchBox.charTyped(codePoint, modifiers)){
             return true;
@@ -568,5 +561,17 @@ public class BestiaryScreen extends Screen {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY){
         if(this.activeSideScreenComponent != null && this.activeSideScreenComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers){
+        if(this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)){
+            return true;
+        }
+        if(ModKeybinds.KEY_OPEN_BESTIARY.get().matches(keyCode, scanCode)){
+            Minecraft.getInstance().setScreen(null);
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
