@@ -65,6 +65,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
     protected CustomButton clearPointsButton;
     protected CustomButton leaderboardButton;
 
+    protected boolean enableSpecialBuffs = false;
+
     public FocusedBestiaryEntryScreenComponent(int x, int y, int width, BestiaryScreen parentScreen, ResourceLocation mobId, BestiaryData data) {
         super(x, y, width, parentScreen);
 
@@ -74,6 +76,8 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
 
         this.levelsPerPoint = ClientConfigStore.INSTANCE.levelsPerSpecialBuffPoint;
+
+        if(ClientConfigStore.INSTANCE.enableSpecialBuffs) enableSpecialBuffs = true;
 
         this.initializeBuffs();
         this.finalizeLayout();
@@ -173,16 +177,16 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
         this.leaderboardButton.setX(adjustedX + 6);
         this.leaderboardButton.setY(nextY + 6 - (int)this.scrollAmount);
-        nextY += EXTRA_BUTTONS_HEIGHT + PADDING;
+        nextY += EXTRA_BUTTONS_HEIGHT + 2 * PADDING;
 
-        renderPointSection(guiGraphics,
+        if(enableSpecialBuffs) renderPointSection(guiGraphics,
                 adjustedX, nextY,
                 mouseX, mouseY);
     }
 
     private int renderPointSection(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY){
         int rightX = x + this.availableWidth;
-        int nextY = y + PADDING;
+        int nextY = y;
 
         if(this.data.level() >= this.levelsPerPoint){
             this.clearPointsButton.setX(x + 6);
@@ -259,14 +263,16 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
 
     @Override
     public void renderContentButtons(GuiGraphics guiGraphics, int mouseX, int mouseY){
+        this.leaderboardButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
+        this.leaderboardButton.render(guiGraphics, mouseX, mouseY, 0F);
+
+        if(!enableSpecialBuffs) return;
+
         if(this.clearPointsButton != null){
             this.clearPointsButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
             this.clearPointsButton.setActive(this.data.remainingPoints() != this.data.totalPoints());
             this.clearPointsButton.render(guiGraphics, mouseX, mouseY, 0F);
         }
-
-        this.leaderboardButton.setYClip(this.y + OUTSIDE_BORDER_SIZE, this.y + this.height - OUTSIDE_BORDER_SIZE);
-        this.leaderboardButton.render(guiGraphics, mouseX, mouseY, 0F);
 
         for(var entry : this.specialBuffButtons.entrySet()){
             Component tooltip = null;
@@ -442,12 +448,14 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         y += PADDING;
         y += EXTRA_BUTTONS_HEIGHT;
 
-        if(data.level() >= this.levelsPerPoint){
-            y += getPointsSectionHeight();
-        }
+        if(enableSpecialBuffs) {
+            if (data.level() >= this.levelsPerPoint) {
+                y += getPointsSectionHeight();
+            }
 
-        y += PADDING;
-        y += getLevelBarHeight();
+            y += PADDING;
+            y += getLevelBarHeight();
+        }
 
         return y + 1; // +1 to account for slight rounding error
     }

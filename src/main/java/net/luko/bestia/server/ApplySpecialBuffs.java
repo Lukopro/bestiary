@@ -104,17 +104,17 @@ public class ApplySpecialBuffs {
         float threshold = manager.getSpecialBuffValue(SpecialBuffRegistry.EXECUTE, mobId);
         if(threshold <= 0F) return;
 
-        if(entity.getHealth() <= entity.getMaxHealth() * threshold){
-            Holder<DamageType> holder = player.server.registryAccess()
-                            .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY)
-                                    .getHolderOrThrow(DamageTypes.FELL_OUT_OF_WORLD);
+        if(entity.getHealth() >= entity.getMaxHealth() * threshold) return;
 
-            DamageSource source = new DamageSource(holder, player, player);
+        Holder<DamageType> holder = player.server.registryAccess()
+                        .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY)
+                                .getHolderOrThrow(DamageTypes.FELL_OUT_OF_WORLD);
 
-            entity.setHealth(0F);
-            entity.die(source);
-            event.setCanceled(true);
-        }
+        DamageSource source = new DamageSource(holder, player, player);
+
+        entity.setHealth(0F);
+        entity.die(source);
+        event.setCanceled(true);
     }
 
     @SubscribeEvent

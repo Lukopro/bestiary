@@ -213,7 +213,6 @@ public class BestiaryScreen extends Screen {
     }
 
     public void openFocusedEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
-        if(!ClientConfigStore.INSTANCE.enableSpecialBuffs) return;
         this.clearSideScreenComponent();
         int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
         this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);
