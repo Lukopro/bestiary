@@ -55,11 +55,11 @@ public class BestiaCommonConfig {
 
         DAMAGE_FACTOR_PER_LEVEL = builder
                 .comment("For each level, how much of the original damage should be added on attack (additive)? (default: 0.05)")
-                .defineInRange("damageFactorPerLevel", 0.05, 0.0, 1.0);
+                .defineInRange("damageFactorPerLevel", 0.02, 0.0, 1.0);
 
         RESISTANCE_FACTOR_PER_LEVEL = builder
                 .comment("For each level, by what factor should incoming damage be multiplied by (multiplicative)? (default: 0.96)")
-                .defineInRange("resistanceFactorPerLevel", 0.96, 0.1, 1.0);
+                .defineInRange("resistanceFactorPerLevel", 0.98, 0.1, 1.0);
 
         LEVELS_PER_SPECIAL_BUFF_POINT = builder
                 .comment("How many levels until a special buff point is earned? (default: 10)")
@@ -109,10 +109,9 @@ public class BestiaCommonConfig {
 
         builder.push("Stats");
 
-        // Level 18341 is about where my data starts to break :/
         MAX_LEVEL = builder
-                .comment("Max mob level you can achieve? (default: 18340)")
-                .defineInRange("maxLevel", 18340, 1, Integer.MAX_VALUE);
+                .comment("Max mob level you can achieve? (default: 10000)")
+                .defineInRange("maxLevel", 10000, 1, Integer.MAX_VALUE);
 
         KILLS_FORMULA = builder
                 .comment("This string is passed to a custom formula parser as a formula, and is used for level calculations.")
