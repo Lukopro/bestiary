@@ -2,7 +2,7 @@ package net.luko.bestia.screen.side;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.client.ClientBestiaryData;
-import net.luko.bestia.config.BestiaCommonConfig;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.data.leaderboard.LeaderboardEntry;
 import net.luko.bestia.screen.BestiaryScreen;
 import net.luko.bestia.screen.widget.CustomButton;
@@ -65,7 +65,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
         // Expected max values as strings
         int maxRank = 999;
         String maxPlayerName = "WWWWWWWWWWWWWWWW";
-        int maxLevel = BestiaCommonConfig.MAX_LEVEL.get();
+        int maxLevel = ClientConfigStore.INSTANCE.maxLevel;
 
         Font font = Minecraft.getInstance().font;
 
@@ -200,7 +200,7 @@ public class BestiaryLeaderboardScreenComponent extends BestiarySideScreenCompon
 
     private float drawFootnote(GuiGraphics guiGraphics, float minX, float maxX, float y){
         float nextY = y;
-        int minLevel = BestiaCommonConfig.MIN_LEADERBOARD_LEVEL.get();
+        int minLevel = ClientConfigStore.INSTANCE.minLeaderboardLevel;
         String footnote = minLevel == 0 ? NO_MINIMUM : String.format(MINIMUM, minLevel);
 
         PoseStack poseStack = guiGraphics.pose();

@@ -14,12 +14,12 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -29,7 +29,7 @@ public class ModCommands {
     public static final SuggestionProvider<CommandSourceStack> ENTITY_SUGGESTIONS = (ctx, builder) ->
             SharedSuggestionProvider.suggestResource(
                     ForgeRegistries.ENTITY_TYPES.getKeys().stream()
-                            .filter(MobIdUtil::validBestiaryMob)
+                            .filter(id -> MobIdUtil.validBestiaryMob(id, LogicalSide.SERVER))
                             .toList(),
                     builder
             );

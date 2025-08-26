@@ -3,9 +3,9 @@ package net.luko.bestia.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.client.ModKeybinds;
 import net.luko.bestia.config.BestiaClientConfig;
-import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.leaderboard.LeaderboardEntry;
 import net.luko.bestia.screen.side.*;
@@ -213,7 +213,7 @@ public class BestiaryScreen extends Screen {
     }
 
     public void openFocusedEntryScreenComponent(ResourceLocation mobId, BestiaryData data){
-        if(!BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()) return;
+        if(!ClientConfigStore.INSTANCE.enableSpecialBuffs) return;
         this.clearSideScreenComponent();
         int max = BestiaryEntryScreenComponent.ENTRY_WIDTH * 2;
         this.sideScreenWidth = this.getSideScreenComponentWidth(max, true);

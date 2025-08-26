@@ -1,6 +1,7 @@
 package net.luko.bestia.util;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.config.BestiaCommonConfig;
 
 import java.util.ArrayList;
@@ -13,6 +14,10 @@ public class LevelFormula {
         formula = BestiaCommonConfig.KILLS_FORMULA.get();
 
         checkIfValid(BestiaCommonConfig.MONOTONY_CHECK.get());
+    }
+
+    public static void reinitializeForClient(){
+        formula = ClientConfigStore.INSTANCE.killsFormula;
     }
 
     private static void checkIfValid(boolean fullCheck){
@@ -45,10 +50,12 @@ public class LevelFormula {
         }
     }
 
+    // getKills() can be used for client or server
     public static int getKills(int level){
         return (int)Math.floor(FormulaParser.evaluate(formula, level));
     }
 
+    // getLevel() is only built for server use at the moment
     public static int getLevel(int kills){
         int min = 0;
         int max = BestiaCommonConfig.MAX_LEVEL.get();

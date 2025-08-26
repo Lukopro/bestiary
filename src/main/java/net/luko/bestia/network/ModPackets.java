@@ -48,5 +48,10 @@ public class ModPackets {
                 LeaderboardPacket::encode,
                 LeaderboardPacket::decode,
                 LeaderboardPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, ConfigSyncPacket.class,
+                ConfigSyncPacket::encode,
+                ConfigSyncPacket::decode,
+                ConfigSyncPacket::handle);
     }
 }

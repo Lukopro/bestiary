@@ -7,21 +7,23 @@ import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.util.ResourceUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -32,6 +34,9 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.*;
@@ -43,14 +48,20 @@ public class ApplySpecialBuffs {
             ResourceKey.createRegistryKey(ResourceUtil.fromNamespaceAndPath("minecraft", "damage_type"));
 
 
+
     @SubscribeEvent
     public static void applyRerollBuff(LivingDropsEvent event){
-        if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         LivingEntity entity = event.getEntity();
         Level level = entity.level();
         if(level.isClientSide) return;
 
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ServerPlayer player = null;
+        Entity source = event.getSource().getEntity();
+        if(source instanceof ServerPlayer sp1) player = sp1;
+        if(source instanceof Projectile proj && proj.getOwner() instanceof ServerPlayer sp2) player = sp2;
+        if(player == null) return;
+
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
         int rerolls = manager.getSpecialBuffValue(SpecialBuffRegistry.REROLL, mobId);
@@ -86,7 +97,7 @@ public class ApplySpecialBuffs {
         if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
 
         LivingEntity entity = event.getEntity();
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
@@ -95,10 +106,13 @@ public class ApplySpecialBuffs {
 
         if(entity.getHealth() <= entity.getMaxHealth() * threshold){
             Holder<DamageType> holder = player.server.registryAccess()
-                    .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, EXECUTE_SOURCE));
+                            .registryOrThrow(DAMAGE_TYPE_REGISTRY_KEY)
+                                    .getHolderOrThrow(DamageTypes.FELL_OUT_OF_WORLD);
 
-            entity.hurt(new DamageSource(holder), entity.getMaxHealth());
+            DamageSource source = new DamageSource(holder, player, player);
 
+            entity.setHealth(0F);
+            entity.die(source);
             event.setCanceled(true);
         }
     }
@@ -106,7 +120,7 @@ public class ApplySpecialBuffs {
     @SubscribeEvent
     public static void applyLifestealBuff(LivingDamageEvent event){
         if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
@@ -122,7 +136,7 @@ public class ApplySpecialBuffs {
         Entity source = event.getSource().getEntity();
         if(!(source instanceof LivingEntity attacker)) return;
 
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType());
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(attacker.getType());
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
@@ -138,7 +152,7 @@ public class ApplySpecialBuffs {
         if(target.level().isClientSide) return;
         if(!(target instanceof Mob mob)) return;
 
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
 
@@ -193,19 +207,19 @@ public class ApplySpecialBuffs {
         mobAITickCounts = newTickCounts;
     }
 
-    private static Set<UUID> mobsToCancelKnockback = new HashSet<>();
-
     @SubscribeEvent
     public static void markToCancelKnockback(LivingHurtEvent event){
         if(!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
+
         LivingEntity target = event.getEntity();
         if(target.level().isClientSide) return;
 
-        ResourceLocation mobId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
+        ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;
 
-        if(manager.getSpecialBuffValue(SpecialBuffRegistry.HOLD, mobId)) mobsToCancelKnockback.add(target.getUUID());
+        if(!manager.getSpecialBuffValue(SpecialBuffRegistry.HOLD, mobId)) return;
+        target.getPersistentData().putBoolean("BestiaryHoldBuffActive", true);
     }
 
     @SubscribeEvent
@@ -213,26 +227,10 @@ public class ApplySpecialBuffs {
         LivingEntity target = event.getEntity();
         if (target.level().isClientSide) return;
 
-        if (mobsToCancelKnockback.contains(target.getUUID())) {
-            event.setStrength(0);
-            mobsToCancelKnockback.remove(target.getUUID());
-        }
-    }
+        if (!target.getPersistentData().getBoolean("BestiaryHoldBuffActive")) return;
 
-    @SubscribeEvent
-    public static void cleanupKnockbackList(TickEvent.ServerTickEvent event){
-        if(event.phase != TickEvent.Phase.END) return;
-
-        Iterator<UUID> iterator = mobsToCancelKnockback.iterator();
-        while(iterator.hasNext()){
-            UUID uuid = iterator.next();
-            Entity entity = null;
-            for(ServerLevel level : ServerLifecycleHooks.getCurrentServer().getAllLevels()){
-                entity = level.getEntity(uuid);
-                if(entity != null) break;
-            }
-            if(entity == null || !entity.isAlive()) iterator.remove();
-        }
+        event.setStrength(0);
+        target.getPersistentData().remove("BestiaryHoldBuffActive");
     }
 
 }

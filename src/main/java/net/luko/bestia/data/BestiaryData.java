@@ -33,7 +33,7 @@ public record BestiaryData(
     }
 
     public static int totalNeededForLevel(int level){
-        return level * (level + 1);
+        return LevelFormula.getKills(level);
     }
 
     public static BestiaryData compute(int kills, Map<ResourceLocation, Integer> spentPoints){

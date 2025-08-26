@@ -15,6 +15,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collections;
@@ -109,7 +110,7 @@ public class BestiaryManager {
     }
 
     public void setKillsAndSync(ServerPlayer player, ResourceLocation mobId, int kills){
-        if(!MobIdUtil.validBestiaryMob(mobId)){
+        if(!MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)){
             Bestia.LOGGER.warn("Attempted to modify Bestiary for invalid mob ID: {}", mobId);
             return;
         }
@@ -157,13 +158,13 @@ public class BestiaryManager {
     }
 
     public int getKillCount(ResourceLocation mobId){
-        return MobIdUtil.validBestiaryMob(mobId)
+        return MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)
                 ? this.killCounts.getOrDefault(mobId, 0)
                 : 0;
     }
 
     public BestiaryData getData(ResourceLocation mobId){
-        return MobIdUtil.validBestiaryMob(mobId)
+        return MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)
                 ? this.cachedData.getOrDefault(mobId, BestiaryData.compute(0, new HashMap<>()))
                 : BestiaryData.compute(0, new HashMap<>());
     }
@@ -210,7 +211,7 @@ public class BestiaryManager {
     }
 
     public int getSpecialBuffLevel(SpecialBuff<?> buff, ResourceLocation mobId){
-        return BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get() && MobIdUtil.validBestiaryMob(mobId)
+        return BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get() && MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)
                 ? this.spentPoints.getOrDefault(mobId, new HashMap<>()).getOrDefault(buff.getId(), 0)
                 : 0;
     }

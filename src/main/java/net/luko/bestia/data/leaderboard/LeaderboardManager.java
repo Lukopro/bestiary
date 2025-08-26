@@ -13,25 +13,26 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.GameProfileCache;
+import net.minecraftforge.fml.LogicalSide;
 
 import java.util.*;
 
 public class LeaderboardManager {
     public static List<LeaderboardEntry> getLeaderboard(ResourceLocation mobId, MinecraftServer server){
-        if(!MobIdUtil.validBestiaryMob(mobId)){
+        if(!MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)){
             Bestia.LOGGER.error("Player requested leaderboard data for invalid mob");
             return null;
         }
 
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
 
-        addOnlinePlayers(leaderboard, mobId, server);
+        addOnlinePlayers(leaderboard, mobId);
         addOfflinePlayers(leaderboard, mobId, server);
 
         return leaderboard;
     }
 
-    private static void addOnlinePlayers(List<LeaderboardEntry> leaderboard, ResourceLocation mobId, MinecraftServer server) {
+    private static void addOnlinePlayers(List<LeaderboardEntry> leaderboard, ResourceLocation mobId) {
         for(BestiaryManager manager : PlayerBestiaryStore.getAll().values()){
             String name = manager.getPlayerName();
             int level = manager.getData(mobId).level();

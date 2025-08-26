@@ -1,5 +1,6 @@
 package net.luko.bestia.config;
 
+import net.luko.bestia.client.ClientConfigStore;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -116,8 +117,8 @@ public class BestiaCommonConfig {
         KILLS_FORMULA = builder
                 .comment("This string is passed to a custom formula parser as a formula, and is used for level calculations.")
                 .comment("The formula should be strictly increasing. Formula supports +-*/^ and unary minus operators, and parenthesis.")
-                .comment("For a level, L (case-sensitive), this equation maps it to an amount of kills. (default: L * (L + 1))")
-                .define("killsFormula", "L * (L + 1)");
+                .comment("For a level, L (case-sensitive), this equation maps it to an amount of kills. (default: L * (L + 1), max length = 256 characters)")
+                .define("killsFormula", "L * (L + 1)", value -> value instanceof String && ((String) value).length() <= 256);
 
         MONOTONY_CHECK = builder
                 .comment("Should the kills formula be fully checked upon modloading?")
@@ -172,5 +173,37 @@ public class BestiaCommonConfig {
 
     public static boolean entityIsWhitelisted(ResourceLocation id){
         return PARSED_WHITELISTED_ENTITIES.contains(id);
+    }
+
+    public static ClientConfigStore createConfigToSync(){
+        ClientConfigStore config = new ClientConfigStore();
+
+        config.enableSpecialBuffs = ENABLE_SPECIAL_BUFFS.get();
+
+        config.damageFactorPerLevel = DAMAGE_FACTOR_PER_LEVEL.get();
+        config.resistanceFactorPerLevel = RESISTANCE_FACTOR_PER_LEVEL.get();
+
+        config.maxLevel = MAX_LEVEL.get();
+        config.killsFormula = KILLS_FORMULA.get();
+
+        config.levelsPerSpecialBuffPoint = LEVELS_PER_SPECIAL_BUFF_POINT.get();
+
+        config.rerollMaxLevel = REROLL_MAX_LEVEL.get();
+        config.executeMaxLevel = EXECUTE_MAX_LEVEL.get();
+        config.lifestealMaxLevel = LIFESTEAL_MAX_LEVEL.get();
+        config.reflexMaxLevel = REFLEX_MAX_LEVEL.get();
+        config.dazeMaxLevel = DAZE_MAX_LEVEL.get();
+
+        config.executeBuffPerLevel = EXECUTE_BUFF_PER_LEVEL.get();
+        config.lifestealBuffPerLevel = LIFESTEAL_BUFF_PER_LEVEL.get();
+        config.reflexBuffPerLevel = REFLEX_BUFF_PER_LEVEL.get();
+        config.dazeBuffPerLevel = DAZE_BUFF_PER_LEVEL.get();
+
+        config.minLeaderboardLevel = MIN_LEADERBOARD_LEVEL.get();
+
+        config.blacklistedEntities = PARSED_BLACKLISTED_ENTITIES;
+        config.whitelistedEntities = PARSED_WHITELISTED_ENTITIES;
+
+        return config;
     }
 }

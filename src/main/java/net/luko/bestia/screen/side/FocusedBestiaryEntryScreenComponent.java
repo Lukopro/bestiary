@@ -2,7 +2,7 @@ package net.luko.bestia.screen.side;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
-import net.luko.bestia.config.BestiaCommonConfig;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuff;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
@@ -16,11 +16,9 @@ import net.luko.bestia.screen.widget.CustomButton;
 import net.luko.bestia.util.ResourceUtil;
 import net.luko.bestia.util.RomanUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
@@ -75,7 +73,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         this.entry = new BestiaryEntryScreenComponent(this.mobId, this.data, null, true);
         this.entityType = BuiltInRegistries.ENTITY_TYPE.get(mobId);
 
-        this.levelsPerPoint = BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get();
+        this.levelsPerPoint = ClientConfigStore.INSTANCE.levelsPerSpecialBuffPoint;
 
         this.initializeBuffs();
         this.finalizeLayout();
@@ -231,28 +229,30 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         int lastPointLevel = Mth.floor((float)this.data.level() / (float)levelsPerPoint) * levelsPerPoint;
         int nextPointLevel = lastPointLevel + this.levelsPerPoint;
 
-        int lastTenthWidth = FONT.width(String.valueOf(lastPointLevel));
+        int lastPointWidth = FONT.width(String.valueOf(lastPointLevel));
         guiGraphics.drawString(FONT, String.valueOf(lastPointLevel),
                 x, nextY, 0xFFFFFF);
 
-        int nextTenthWidth = FONT.width(String.valueOf(nextPointLevel));
+        int nextPointWidth = FONT.width(String.valueOf(nextPointLevel));
         guiGraphics.drawString(FONT, String.valueOf(nextPointLevel),
-                rightX - nextTenthWidth, nextY, 0xFFFFFF);
+                rightX - nextPointWidth, nextY, 0xFFFFFF);
 
-        float splitFactor = ((float)this.data.kills() - (float)BestiaryData.totalNeededForLevel(lastPointLevel))
-                / ((float)BestiaryData.totalNeededForLevel(nextPointLevel) - (float)BestiaryData.totalNeededForLevel(lastPointLevel));
+        int acquiredKillsForNextPoint = this.data.kills() - BestiaryData.totalNeededForLevel(lastPointLevel);
+        int neededKillsForNextPoint = BestiaryData.totalNeededForLevel(nextPointLevel) - BestiaryData.totalNeededForLevel(lastPointLevel);
+
+        float splitFactor = (float)acquiredKillsForNextPoint / (float)neededKillsForNextPoint;
         int prevY = nextY;
-        nextY = drawLevelBar(guiGraphics, x + lastTenthWidth + 2, rightX - nextTenthWidth - 2, nextY, splitFactor);
+        nextY = drawLevelBar(guiGraphics, x + lastPointWidth + 2, rightX - nextPointWidth - 2, nextY, splitFactor);
 
         this.tooltips.add(new BestiaryTooltip(
-                x + lastTenthWidth + 2, rightX - nextTenthWidth - 2,
-                prevY, nextY,
-                List.of(Component.literal(this.data.level() >= BestiaCommonConfig.MAX_LEVEL.get()
+                x + lastPointWidth + 2, rightX - nextPointWidth - 2,
+                prevY - (int)this.scrollAmount, nextY - (int)this.scrollAmount,
+                List.of(Component.literal(this.data.level() >= ClientConfigStore.INSTANCE.maxLevel
                         ? "MAX LEVEL!"
                         : String.format("%.1f%% (%d/%d kills)",
                         splitFactor * 100F,
-                        this.data.kills() - BestiaryData.totalNeededForLevel(lastPointLevel),
-                        BestiaryData.totalNeededForLevel(nextPointLevel) - BestiaryData.totalNeededForLevel(lastPointLevel))))));
+                        acquiredKillsForNextPoint,
+                        neededKillsForNextPoint)))));
 
         return nextY;
     }
@@ -442,7 +442,7 @@ public class FocusedBestiaryEntryScreenComponent extends BestiarySideScreenCompo
         y += PADDING;
         y += EXTRA_BUTTONS_HEIGHT;
 
-        if(data.level() >= BestiaCommonConfig.LEVELS_PER_SPECIAL_BUFF_POINT.get()){
+        if(data.level() >= this.levelsPerPoint){
             y += getPointsSectionHeight();
         }
 

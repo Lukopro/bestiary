@@ -1,11 +1,14 @@
 package net.luko.bestia.server;
 
 import net.luko.bestia.Bestia;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryKey;
 import net.luko.bestia.data.BestiaryManager;
 import net.luko.bestia.data.buff.MobBuff;
 import net.luko.bestia.data.PlayerBestiaryStore;
+import net.luko.bestia.network.ConfigSyncPacket;
+import net.luko.bestia.network.ModPackets;
 import net.luko.bestia.util.MobIdUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -24,7 +27,9 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
@@ -88,6 +93,10 @@ public class ServerModEvents {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
         if(!(event.getEntity() instanceof ServerPlayer player)) return;
+        ModPackets.CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new ConfigSyncPacket(BestiaCommonConfig.createConfigToSync()));
+
         UUID uuid = player.getUUID();
 
         CompoundTag bestiaryTag = BestiaryOfflineCache.get(uuid);
@@ -163,7 +172,7 @@ public class ServerModEvents {
         ResourceLocation mobId = ForgeRegistries.ENTITY_TYPES.getKey(
                 event.getEntity().getType());
 
-        if(!MobIdUtil.validBestiaryMob(mobId)) return;
+        if(!MobIdUtil.validBestiaryMob(mobId, LogicalSide.SERVER)) return;
 
         BestiaryManager manager = PlayerBestiaryStore.get(player);
         if(manager == null) return;

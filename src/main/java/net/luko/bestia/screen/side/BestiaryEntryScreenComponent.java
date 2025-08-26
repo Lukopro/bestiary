@@ -3,8 +3,8 @@ package net.luko.bestia.screen.side;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.luko.bestia.Bestia;
+import net.luko.bestia.client.ClientConfigStore;
 import net.luko.bestia.config.BestiaClientConfig;
-import net.luko.bestia.config.BestiaCommonConfig;
 import net.luko.bestia.data.BestiaryData;
 import net.luko.bestia.data.buff.special.SpecialBuffRegistry;
 import net.luko.bestia.screen.BestiaryScreen;
@@ -127,12 +127,12 @@ public class BestiaryEntryScreenComponent {
 
         this.drawContent(guiGraphics, x + 48, 116, y + TITLE_TEXTURE_HEIGHT + 5, 38);
 
-        if(!this.focused && BestiaClientConfig.SHOW_NOTIFICATION_BADGES.get() && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()) this.drawNotificationBadge(guiGraphics, rightTitleX - 4, y - 4);
+        if(!this.focused && BestiaClientConfig.SHOW_NOTIFICATION_BADGES.get() && ClientConfigStore.INSTANCE.enableSpecialBuffs) this.drawNotificationBadge(guiGraphics, rightTitleX - 4, y - 4);
 
         this.tooltips.add(new BestiaryTooltip(
                 x, x + ENTRY_WIDTH,
                 y + ENTRY_HEIGHT - LEVEL_BAR_HEIGHT, y + ENTRY_HEIGHT,
-                List.of(Component.literal(this.data.level() >= BestiaCommonConfig.MAX_LEVEL.get()
+                List.of(Component.literal(this.data.level() >= ClientConfigStore.INSTANCE.maxLevel
                         ? "MAX LEVEL!"
                         : String.format(
                         "%.1f%% (%d/%d kills)",
@@ -153,7 +153,7 @@ public class BestiaryEntryScreenComponent {
 
         String fullResistanceText = String.format("x%.3f damage taken",
                 data.mobBuff().resistanceFactor());
-        if(!focused && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()){
+        if(!focused && ClientConfigStore.INSTANCE.enableSpecialBuffs){
             ResourceLocation damageTexture = ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/damage.png");
             ResourceLocation resistanceTexture = ResourceUtil.fromNamespaceAndPath(Bestia.MODID, "textures/gui/bestiary/buff/resistance.png");
             String damageText = String.format("x%.2f", data.mobBuff().damageFactor());
@@ -525,7 +525,7 @@ public class BestiaryEntryScreenComponent {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button){
-        if(this.mouseIsHovering && button == 0 && BestiaCommonConfig.ENABLE_SPECIAL_BUFFS.get()){
+        if(this.mouseIsHovering && button == 0){
             if(this.parentScreen != null) parentScreen.openFocusedEntryScreenComponent(this.mobId, this.data);
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             return true;
