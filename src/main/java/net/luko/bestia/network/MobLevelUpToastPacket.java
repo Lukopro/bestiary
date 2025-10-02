@@ -8,6 +8,9 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -30,11 +33,20 @@ public class MobLevelUpToastPacket {
     public static void handle(MobLevelUpToastPacket msg, Supplier<NetworkEvent.Context> contextSupplier){
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
+            if (FMLEnvironment.dist == Dist.CLIENT){
+                ClientHandler.handle(msg);
+            }
+        });
+        context.setPacketHandled(true);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static class ClientHandler {
+        static void handle(MobLevelUpToastPacket msg){
             BestiaryData data = ClientBestiaryData.getFor(msg.mobId);
             Minecraft mc = Minecraft.getInstance();
             mc.getToasts().addToast(new MobLevelUpToast(msg.mobId, data));
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.0F));
-        });
-        context.setPacketHandled(true);
+        }
     }
 }
